@@ -6,20 +6,43 @@
  * @license GPLv3+
  */
 
-use GlpiPlugin\Govbr\Config;
+use GlpiPlugin\Govbrsso\Config;
 
 include(__DIR__ . '/../../../inc/includes.php');
 
 Session::checkRight('config', UPDATE);
 
-if (isset($_POST['update'])) {
+if (isset($_POST['save_config'])) {
+    // MODO DEBUG SEMPRE ATIVO
+    if (!isset($_POST['_glpi_csrf_token']) || empty($_POST['_glpi_csrf_token'])) {
+        echo "<div style='background:#fff;padding:20px;margin:20px;border:2px solid red;'>";
+        echo "<h3>Modo Debug (Gov.br)</h3>";
+        echo "<p>O token CSRF desapareceu da requisição.</p>";
+        echo "<pre>Conteúdo do POST recebido:\n";
+        print_r($_POST);
+        echo "</pre></div>";
+        die();
+    }
+    
+    // Testa o CSRF manualmente sem morrer, para podermos ver a mensagem
+    if (Session::getNewCSRFToken() !== $_POST['_glpi_csrf_token'] && !in_array($_POST['_glpi_csrf_token'], $_SESSION['glpicsrftokens'] ?? [])) {
+         echo "<div style='background:#fff;padding:20px;margin:20px;border:2px solid red;'>";
+         echo "<h3>Modo Debug (Gov.br)</h3>";
+         echo "<p>O token CSRF é inválido. Ele expirou ou a sessão foi perdida no POST.</p>";
+         echo "<p>Token recebido: " . htmlspecialchars($_POST['_glpi_csrf_token']) . "</p>";
+         echo "<pre>Sessão atual de CSRF:\n";
+         print_r($_SESSION['glpicsrftokens'] ?? []);
+         echo "</pre></div>";
+         die();
+    }
+
     Session::checkCSRF($_POST);
     Config::save($_POST);
-    Session::addMessageAfterRedirect('Configuração do gov.br salva.', true, INFO);
-    Html::back();
+    Session::addMessageAfterRedirect('Configuração do gov.br salva com sucesso.', true, INFO);
+    Html::redirect($_SERVER['REQUEST_URI']);
 }
 
-Html::header('Login Único gov.br', $_SERVER['PHP_SELF'], 'config', 'plugins');
+Html::header('Login Único gov.br', $_SERVER['REQUEST_URI'], 'config', 'plugins');
 
 $c = Config::getAll();
 
@@ -35,16 +58,36 @@ $f = static fn (string $k): string => Html::cleanInputText((string) ($c[$k] ?? '
 $selLogin = static fn (string $v): string => $c['login_field'] === $v ? 'selected' : '';
 $selLevel = static fn (string $v): string => ($c['min_level'] ?? '') === $v ? 'selected' : '';
 
+$formAction = $_SERVER['REQUEST_URI'];
+
 echo <<<HTML
 <div class="card" style="max-width:820px;margin:1rem auto;padding:1rem">
 <h2>Login Único gov.br</h2>
 
-<p><strong>URL de retorno (redirect_uri)</strong> a cadastrar na credencial:<br>
-<code>{$callbackUrl}</code></p>
-<p><strong>URL de Log Out</strong> a cadastrar na credencial:<br>
-<code>{$logoutUrl}</code></p>
+<div style="background: #eef9fd; border-left: 4px solid #178abb; padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+  <h3 style="margin-top: 0; font-size: 1.2rem; color: #178abb;">Como habilitar a integração com o gov.br?</h3>
+  <ol style="line-height: 1.6; margin-bottom: 0; padding-left: 1.2rem;">
+    <li>Acesse o <a href="https://manual-roteiro-integracao-login-unico.servicos.gov.br/pt/latest/" target="_blank">Roteiro de Integração do gov.br</a> e inicie o processo de solicitação de uso para o seu órgão/entidade.</li>
+    <li>Durante o cadastro do sistema, você precisará informar as URLs de redirecionamento. Copie e cole exatamente as URLs abaixo:
+      <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem; list-style-type: disc;">
+        <li><strong>URL de retorno (redirect_uri):</strong> <code>{$callbackUrl}</code></li>
+        <li><strong>URL de Log Out:</strong> <code>{$logoutUrl}</code></li>
+      </ul>
+    </li>
+    <li>Após a aprovação da integração pelo Ministério da Gestão e da Inovação (MGI), você receberá as credenciais: <strong>client_id</strong> e <strong>client_secret</strong>.</li>
+    <li>Preencha os campos do formulário abaixo com o seu <strong>client_id</strong> e <strong>client_secret</strong> recebidos.</li>
+    <li>Configure a <strong>Provider URL (sso)</strong> conforme o ambiente fornecido pelo gov.br:
+      <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem; list-style-type: disc;">
+        <li>Ambiente de Homologação: <code>https://sso.staging.acesso.gov.br</code></li>
+        <li>Ambiente de Produção: <code>https://sso.acesso.gov.br</code></li>
+      </ul>
+    </li>
+    <li>Defina os <strong>Escopos</strong> liberados na sua integração (geralmente: <code>openid email profile govbr_confiabilidades</code>).</li>
+    <li>Marque a opção <strong>Ativar o botão "Entrar com gov.br"</strong> no final do formulário e clique em <strong>Salvar</strong>.</li>
+  </ol>
+</div>
 
-<form method="post" action="{$_SERVER['PHP_SELF']}">
+<form method="post" action="{$formAction}">
   <input type="hidden" name="_glpi_csrf_token" value="{$csrf}">
 
   <p><label>Provider URL (sso)<br>
@@ -79,7 +122,7 @@ echo <<<HTML
   <p><label><input type="checkbox" name="is_active" value="1" {$active}>
     Ativar o botão "Entrar com gov.br"</label></p>
 
-  <p><button type="submit" name="update" class="btn btn-primary">Salvar</button></p>
+  <p><button type="submit" name="save_config" class="btn btn-primary">Salvar</button></p>
 </form>
 </div>
 HTML;

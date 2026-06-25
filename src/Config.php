@@ -1,6 +1,6 @@
 <?php
 
-namespace GlpiPlugin\Govbr;
+namespace GlpiPlugin\Govbrsso;
 
 use Config as GlpiConfig;
 use GLPIKey;
@@ -9,7 +9,7 @@ use Html;
 /**
  * Configuração do plugin gov.br.
  *
- * Usa a API de configuração do GLPI (glpi_configs, contexto 'plugin:govbr'),
+ * Usa a API de configuração do GLPI (glpi_configs, contexto 'plugin:govbrsso'),
  * evitando tabelas próprias. O client_secret é guardado cifrado com a chave do
  * GLPI (GLPIKey).
  *
@@ -18,10 +18,10 @@ use Html;
 final class Config
 {
     /** Contexto de configuração no GLPI. */
-    public const CONTEXT = 'plugin:govbr';
+    public const CONTEXT = 'plugin:govbrsso';
 
     /** Nome da variável SSO dedicada criada na instalação. */
-    public const SSO_VARIABLE_NAME = 'HTTP_GOVBR_REMOTE_USER';
+    public const SSO_VARIABLE_NAME = 'HTTP_GOVBRSSO_REMOTE_USER';
 
     /** Defaults de homologação. */
     private const DEFAULTS = [
@@ -151,21 +151,21 @@ final class Config
     public static function callbackUrl(): string
     {
         global $CFG_GLPI;
-        return $CFG_GLPI['url_base'] . '/plugins/govbr/front/callback.php';
+        return $CFG_GLPI['url_base'] . '/plugins/govbrsso/front/callback.php';
     }
 
     /** URL de início do fluxo (alvo do botão). */
     public static function startUrl(): string
     {
         global $CFG_GLPI;
-        return $CFG_GLPI['root_doc'] . '/plugins/govbr/front/redirect.php';
+        return $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/redirect.php';
     }
 
     /** URL de logout do plugin (para cadastrar como "URL de Log Out"). */
     public static function pluginLogoutUrl(): string
     {
         global $CFG_GLPI;
-        return $CFG_GLPI['url_base'] . '/plugins/govbr/front/logout.php';
+        return $CFG_GLPI['url_base'] . '/plugins/govbrsso/front/logout.php';
     }
 
     /** Botão "Entrar com gov.br" para a tela de login. */
@@ -177,10 +177,10 @@ final class Config
         $url = Html::cleanInputText(self::startUrl());
 
         return <<<HTML
-<div class="govbr-login-wrapper">
-  <a href="{$url}" class="govbr-signin" role="button" aria-label="Entrar com gov.br">
-    <span class="govbr-signin__text">Entrar com</span>
-    <span class="govbr-signin__brand">gov.br</span>
+<div class="govbrsso-login-wrapper">
+  <a href="{$url}" class="govbrsso-signin" role="button" aria-label="Entrar com gov.br">
+    <span class="govbrsso-signin__text">Entrar com</span>
+    <span class="govbrsso-signin__brand">gov.br</span>
   </a>
 </div>
 HTML;

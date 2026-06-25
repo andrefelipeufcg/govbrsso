@@ -1,6 +1,6 @@
 <?php
 
-namespace GlpiPlugin\Govbr;
+namespace GlpiPlugin\Govbrsso;
 
 use Auth;
 use Profile_User;
@@ -106,8 +106,8 @@ final class UserManager
         // Mapeia o e-mail para o GLPI casar/atualizar (campo SSO de e-mail).
         $origEmailField = $CFG_GLPI['email1_ssofield'] ?? '';
         if ($email !== '') {
-            $CFG_GLPI['email1_ssofield'] = 'GOVBR_EMAIL';
-            $_SERVER['GOVBR_EMAIL'] = $email;
+            $CFG_GLPI['email1_ssofield'] = 'GOVBRSSO_EMAIL';
+            $_SERVER['GOVBRSSO_EMAIL'] = $email;
         }
 
         try {
@@ -118,7 +118,7 @@ final class UserManager
             $CFG_GLPI['ssovariables_id'] = $origSso;
             unset($_SERVER[Config::SSO_VARIABLE_NAME]);
             $CFG_GLPI['email1_ssofield'] = $origEmailField;
-            unset($_SERVER['GOVBR_EMAIL'], $_SESSION['glpi_remote_user']);
+            unset($_SERVER['GOVBRSSO_EMAIL'], $_SESSION['glpi_remote_user']);
         }
 
         if (!$ok) {

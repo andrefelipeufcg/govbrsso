@@ -16,8 +16,8 @@ fluxo OIDC/PKCE, valida o token e cria a sessão do GLPI usando o caminho de
 
 ## Instalação
 
-1. Copie a pasta `govbr/` para `<GLPI>/plugins/` (o nome da pasta **precisa** ser
-   `govbr`).
+1. Copie a pasta `govbrsso/` para `<GLPI>/plugins/` (o nome da pasta **precisa** ser
+   `govbrsso`).
 2. Em **Configurar > Plugins**, instale e ative o "Login Único gov.br".
 3. Abra a configuração do plugin (engrenagem) e preencha os campos.
 
@@ -26,8 +26,8 @@ fluxo OIDC/PKCE, valida o token e cria a sessão do GLPI usando o caminho de
 Na página do plugin você verá duas URLs geradas automaticamente — cadastre-as na
 credencial gov.br:
 
-- **URL de retorno (redirect_uri):** `.../plugins/govbr/front/callback.php`
-- **URL de Log Out:** `.../plugins/govbr/front/logout.php`
+- **URL de retorno (redirect_uri):** `.../plugins/govbrsso/front/callback.php`
+- **URL de Log Out:** `.../plugins/govbrsso/front/logout.php`
 
 Campos:
 
@@ -47,7 +47,7 @@ SSO **só autentica**. Após o primeiro login, crie ao menos uma regra em
 **Administração > Regras > Regras de atribuição de habilitações a um usuário**
 (ex.: quem entra por gov.br recebe o perfil *Self-Service* e uma entidade). Sem
 isso o login conclui no gov.br mas o GLPI nega o acesso — o plugin registra essa
-causa em `files/_log/govbr*` e exibe a mensagem correspondente.
+causa em `files/_log/govbrsso*` e exibe a mensagem correspondente.
 
 ## Como funciona (resumo técnico)
 
@@ -58,14 +58,14 @@ causa em `files/_log/govbr*` e exibe a mensagem correspondente.
    `nonce`, complementa com `/userinfo` e chama o login.
 3. `src/UserManager.php` casa os claims (`sub`=CPF / e-mail) com um usuário do
    GLPI e executa `Auth::login()` no caminho EXTERNAL, usando uma variável SSO
-   dedicada criada na instalação (`HTTP_GOVBR_REMOTE_USER`) — isso aciona o motor
+   dedicada criada na instalação (`HTTP_GOVBRSSO_REMOTE_USER`) — isso aciona o motor
    de regras e cria a sessão.
 4. `front/logout.php` encerra a sessão local e faz o logout federado no gov.br.
 
 Os dois scripts de fluxo (`redirect.php`, `callback.php`) e o `logout.php` são
 liberados para acesso anônimo no GLPI 11 via
 `Firewall::addPluginStrategyForLegacyScripts(... STRATEGY_NO_CHECK)` no
-`plugin_govbr_boot()` (`setup.php`).
+`plugin_govbrsso_boot()` (`setup.php`).
 
 ## Pontos a validar no seu ambiente
 
@@ -76,9 +76,9 @@ gov.br. Antes de produção, confirme:
   gov.br conforme a credencial recebida.
 - **Botão na tela de login:** o plugin usa o gancho `display_login`. Se a sua
   build do GLPI 11 não o renderizar, o login continua acessível pela URL
-  `.../plugins/govbr/front/redirect.php` (você pode linká-la na tela de login
+  `.../plugins/govbrsso/front/redirect.php` (você pode linká-la na tela de login
   por um tema/HTML próprio), ou adapte para `POST_INIT` + injeção via JS.
-- **Variável SSO:** a instalação cria `HTTP_GOVBR_REMOTE_USER` em
+- **Variável SSO:** a instalação cria `HTTP_GOVBRSSO_REMOTE_USER` em
   `glpi_ssovariables`. O login externo depende dela; não a remova.
 - **2FA nativo do GLPI:** há relato de conflito entre OAuth SSO e o 2FA nativo em
   versões beta do GLPI 11. Se o login falhar com 2FA ligado, teste sem ele para

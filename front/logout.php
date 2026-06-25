@@ -9,7 +9,7 @@
  * @license GPLv3+
  */
 
-use GlpiPlugin\Govbr\Config;
+use GlpiPlugin\Govbrsso\Config;
 
 include(__DIR__ . '/../../../inc/includes.php');
 

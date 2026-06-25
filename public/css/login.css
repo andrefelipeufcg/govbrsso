@@ -1,11 +1,11 @@
 /* Botão "Entrar com gov.br" na tela de login do GLPI. */
-.govbr-login-wrapper {
+.govbrsso-login-wrapper {
   display: flex;
   justify-content: center;
   margin: 12px 0;
 }
 
-.govbr-signin {
+.govbrsso-signin {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -22,13 +22,13 @@
   transition: background .15s ease;
 }
 
-.govbr-signin:hover { background: #0c326f; }
-.govbr-signin:active { background: #0a2a5c; }
-.govbr-signin:focus-visible { outline: 3px solid #c5d4eb; outline-offset: 2px; }
+.govbrsso-signin:hover { background: #0c326f; }
+.govbrsso-signin:active { background: #0a2a5c; }
+.govbrsso-signin:focus-visible { outline: 3px solid #c5d4eb; outline-offset: 2px; }
 
-.govbr-signin__text { font-weight: 400; }
+.govbrsso-signin__text { font-weight: 400; }
 
-.govbr-signin__brand {
+.govbrsso-signin__brand {
   font-weight: 800;
   background: #fff;
   color: #1351b4;

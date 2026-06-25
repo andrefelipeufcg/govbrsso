@@ -1,6 +1,6 @@
 <?php
 
-namespace GlpiPlugin\Govbr;
+namespace GlpiPlugin\Govbrsso;
 
 /**
  * Cliente OIDC do Login Único gov.br (Authorization Code + PKCE S256).

@@ -1,22 +1,22 @@
 <?php
 
 /**
- * Install / uninstall hooks do plugin govbr.
+ * Install / uninstall hooks do plugin govbrsso.
  *
  * @license GPLv3+
  */
 
-use GlpiPlugin\Govbr\Config;
+use GlpiPlugin\Govbrsso\Config;
 
 /**
  * Instalação:
- *  - grava configuração padrão (contexto 'plugin:govbr');
+ *  - grava configuração padrão (contexto 'plugin:govbrsso');
  *  - garante uma variável SSO dedicada em glpi_ssovariables, usada no momento
  *    do login para acionar o caminho de autenticação EXTERNAL do GLPI (que roda
  *    o motor de regras de habilitação). Não altera as variáveis SSO já
  *    existentes do órgão.
  */
-function plugin_govbr_install(): bool
+function plugin_govbrsso_install(): bool
 {
     /** @var DBmysql $DB */
     global $DB;
@@ -43,7 +43,7 @@ function plugin_govbr_install(): bool
 /**
  * Desinstalação: remove a configuração e a variável SSO dedicada.
  */
-function plugin_govbr_uninstall(): bool
+function plugin_govbrsso_uninstall(): bool
 {
     /** @var DBmysql $DB */
     global $DB;

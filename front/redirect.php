@@ -8,8 +8,8 @@
  * @license GPLv3+
  */
 
-use GlpiPlugin\Govbr\Client;
-use GlpiPlugin\Govbr\Config;
+use GlpiPlugin\Govbrsso\Client;
+use GlpiPlugin\Govbrsso\Config;
 
 include(__DIR__ . '/../../../inc/includes.php');
 
@@ -26,13 +26,13 @@ $verifier  = Client::newCodeVerifier();
 $challenge = Client::codeChallenge($verifier);
 
 // Guarda o estado do PKCE/anti-CSRF na sessão para validar no callback.
-$_SESSION['govbr_state']         = $state;
-$_SESSION['govbr_nonce']         = $nonce;
-$_SESSION['govbr_code_verifier'] = $verifier;
+$_SESSION['govbrsso_state']         = $state;
+$_SESSION['govbrsso_nonce']         = $nonce;
+$_SESSION['govbrsso_code_verifier'] = $verifier;
 
 // Preserva eventual destino pós-login.
 if (isset($_GET['redirect'])) {
-    $_SESSION['govbr_redirect'] = (string) $_GET['redirect'];
+    $_SESSION['govbrsso_redirect'] = (string) $_GET['redirect'];
 }
 
 $url = Client::buildAuthorizeUrl(
