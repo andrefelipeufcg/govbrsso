@@ -193,53 +193,28 @@ document.addEventListener('DOMContentLoaded', function() {
     var wrapper = document.getElementById('govbrsso-login-wrapper');
     if (!wrapper) return;
     
-    var googleContainer = document.getElementById("googlesso-login-container");
+    // Procura por botões genéricos de outros plugins SSO para tentar ficar junto deles
+    var ssoBtn = document.querySelector('a[href*="oauth" i], a.oauth-button, a[href*="Google" i]');
+    var form = document.querySelector('form[action*="login.php"], form.login-form');
     
-    if (googleContainer) {
-        var googleBtn = googleContainer.querySelector('a.btn');
-        var govBtn = wrapper.querySelector('a.govbrsso-signin');
+    if (ssoBtn) {
+        // Encontra o container raiz do botão SSO (geralmente uma div com mt-3 ou id que remete a container)
+        var container = ssoBtn.closest('div[id*="container"], div.text-center, div.mt-3');
+        if (!container) container = ssoBtn.parentElement;
         
-        if (googleBtn && govBtn) {
-            // Cria um container em grid do Bootstrap
-            var row = document.createElement('div');
-            row.className = 'row mt-2 g-2';
-            
-            var colGoogle = document.createElement('div');
-            colGoogle.className = 'col-12 col-md-6';
-            
-            var colGov = document.createElement('div');
-            colGov.className = 'col-12 col-md-6';
-            
-            // Remove a margem superior individual e garante largura total
-            googleBtn.classList.remove('mt-2');
-            govBtn.classList.remove('mt-2');
-            googleBtn.classList.add('w-100');
-            govBtn.classList.add('w-100');
-            
-            // Move os botões para suas colunas
-            colGoogle.appendChild(googleBtn);
-            colGov.appendChild(govBtn);
-            
-            row.appendChild(colGoogle);
-            row.appendChild(colGov);
-            
-            // Adiciona a linha ao container do Google e remove o wrapper do govbrsso (e seu "OU" extra)
-            googleContainer.appendChild(row);
-            wrapper.remove();
+        if (container && container.parentNode) {
+            // Insere o nosso wrapper logo APÓS o container do outro plugin, para ficarem um abaixo do outro
+            if (container.nextSibling) {
+                container.parentNode.insertBefore(wrapper, container.nextSibling);
+            } else {
+                container.parentNode.appendChild(wrapper);
+            }
             return;
         }
     }
     
-    // Fallback: se o googlesso não for encontrado, mantém o comportamento original (abaixo do formulário)
-    var form = document.querySelector('form[action*="login.php"], form.login-form');
-    var googleBtnFallback = document.querySelector('a[href*="oauth" i], a.oauth-button, a[href*="Google" i]');
-    
-    if (googleBtnFallback) {
-        var container = googleBtnFallback.closest('div');
-        if (container && container.parentNode) {
-            container.parentNode.appendChild(wrapper);
-        }
-    } else if (form) {
+    // Fallback: se não achar outro SSO, insere no fim do formulário
+    if (form) {
         form.appendChild(wrapper);
     } else {
         var loginCard = document.querySelector('.login_card, .login-box, .card-body');
