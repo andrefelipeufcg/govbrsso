@@ -75,7 +75,7 @@ function plugin_version_govbrsso(): array
     return [
         'name'         => 'Login Único gov.br',
         'version'      => PLUGIN_GOVBRSSO_VERSION,
-        'author'       => 'Seu Órgão',
+        'author'       => 'Daniel Ramos, Andre Felipe',
         'license'      => 'GPLv3+',
         'homepage'     => 'https://acesso.gov.br/roteiro-tecnico/',
         'requirements' => [

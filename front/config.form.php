@@ -14,33 +14,18 @@ Session::checkRight('config', UPDATE);
 
 if (isset($_POST['save_config'])) {
     // MODO DEBUG SEMPRE ATIVO
-    if (!isset($_POST['_glpi_csrf_token']) || empty($_POST['_glpi_csrf_token'])) {
-        echo "<div style='background:#fff;padding:20px;margin:20px;border:2px solid red;'>";
-        echo "<h3>Modo Debug (Gov.br)</h3>";
-        echo "<p>O token CSRF desapareceu da requisição.</p>";
-        echo "<pre>Conteúdo do POST recebido:\n";
-        print_r($_POST);
-        echo "</pre></div>";
-        die();
-    }
-    
-    // Testa o CSRF manualmente sem morrer, para podermos ver a mensagem
-    if (Session::getNewCSRFToken() !== $_POST['_glpi_csrf_token'] && !in_array($_POST['_glpi_csrf_token'], $_SESSION['glpicsrftokens'] ?? [])) {
-         echo "<div style='background:#fff;padding:20px;margin:20px;border:2px solid red;'>";
-         echo "<h3>Modo Debug (Gov.br)</h3>";
-         echo "<p>O token CSRF é inválido. Ele expirou ou a sessão foi perdida no POST.</p>";
-         echo "<p>Token recebido: " . htmlspecialchars($_POST['_glpi_csrf_token']) . "</p>";
-         echo "<pre>Sessão atual de CSRF:\n";
-         print_r($_SESSION['glpicsrftokens'] ?? []);
-         echo "</pre></div>";
-         die();
-    }
+    // Nota: o GLPI core (inc/includes.php) já valida e consome o token CSRF
+    // automaticamente para plugins com csrf_compliant=true. Se o token fosse
+    // inválido, o core já teria abortado antes de chegar aqui.
+    // Portanto, se este código está executando, o CSRF foi validado com sucesso.
+    Toolbox::logInFile('govbrsso', "DEBUG config.form POST recebido:\n" . print_r($_POST, true) . "\n", true);
 
-    Session::checkCSRF($_POST);
     Config::save($_POST);
     Session::addMessageAfterRedirect('Configuração do gov.br salva com sucesso.', true, INFO);
     Html::redirect($_SERVER['REQUEST_URI']);
 }
+
+$csrf = Session::getNewCSRFToken();
 
 Html::header('Login Único gov.br', $_SERVER['REQUEST_URI'], 'config', 'plugins');
 
@@ -48,7 +33,6 @@ $c = Config::getAll();
 
 $active     = $c['is_active'] === '1' ? 'checked' : '';
 $autocreate = $c['auto_create'] === '1' ? 'checked' : '';
-$csrf       = Session::getNewCSRFToken();
 
 $callbackUrl = Html::cleanInputText(Config::callbackUrl());
 $logoutUrl   = Html::cleanInputText(Config::pluginLogoutUrl());

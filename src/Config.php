@@ -177,12 +177,36 @@ final class Config
         $url = Html::cleanInputText(self::startUrl());
 
         return <<<HTML
-<div class="govbrsso-login-wrapper">
+<div class="govbrsso-login-wrapper" id="govbrsso-login-wrapper">
   <a href="{$url}" class="govbrsso-signin" role="button" aria-label="Entrar com gov.br">
     <span class="govbrsso-signin__text">Entrar com</span>
     <span class="govbrsso-signin__brand">gov.br</span>
   </a>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var wrapper = document.getElementById('govbrsso-login-wrapper');
+    if (!wrapper) return;
+    
+    // Procura por links de oauth, botões com logo do google, ou o formulário
+    var googleBtn = document.querySelector('a[href*="oauth" i], a.oauth-button, a[href*="Google" i]');
+    var form = document.querySelector('form[action*="login.php"], form.login-form');
+    
+    if (googleBtn) {
+        var container = googleBtn.closest('div');
+        if (container && container.parentNode) {
+            container.parentNode.appendChild(wrapper);
+        }
+    } else if (form) {
+        form.appendChild(wrapper);
+    } else {
+        var loginCard = document.querySelector('.login_card, .login-box, .card-body');
+        if (loginCard) {
+            loginCard.appendChild(wrapper);
+        }
+    }
+});
+</script>
 HTML;
     }
 }
