@@ -1,9 +1,4 @@
 /* Botão "Entrar com gov.br" na tela de login do GLPI. */
-.govbrsso-login-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 12px 0;
-}
 
 .govbrsso-signin {
   display: inline-flex;

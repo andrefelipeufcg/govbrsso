@@ -177,8 +177,13 @@ final class Config
         $url = Html::cleanInputText(self::startUrl());
 
         return <<<HTML
-<div class="govbrsso-login-wrapper" id="govbrsso-login-wrapper">
-  <a href="{$url}" class="govbrsso-signin" role="button" aria-label="Entrar com gov.br">
+<div class="mt-3 text-center" id="govbrsso-login-wrapper">
+  <div class="d-flex align-items-center my-2">
+      <hr class="flex-grow-1 m-0">
+      <span class="mx-3 text-secondary text-uppercase small">OU</span>
+      <hr class="flex-grow-1 m-0">
+  </div>
+  <a href="{$url}" class="govbrsso-signin w-100 justify-content-center mt-2" role="button" aria-label="Entrar com gov.br">
     <span class="govbrsso-signin__text">Entrar com</span>
     <span class="govbrsso-signin__brand">gov.br</span>
   </a>
@@ -188,12 +193,49 @@ document.addEventListener('DOMContentLoaded', function() {
     var wrapper = document.getElementById('govbrsso-login-wrapper');
     if (!wrapper) return;
     
-    // Procura por links de oauth, botões com logo do google, ou o formulário
-    var googleBtn = document.querySelector('a[href*="oauth" i], a.oauth-button, a[href*="Google" i]');
-    var form = document.querySelector('form[action*="login.php"], form.login-form');
+    var googleContainer = document.getElementById("googlesso-login-container");
     
-    if (googleBtn) {
-        var container = googleBtn.closest('div');
+    if (googleContainer) {
+        var googleBtn = googleContainer.querySelector('a.btn');
+        var govBtn = wrapper.querySelector('a.govbrsso-signin');
+        
+        if (googleBtn && govBtn) {
+            // Cria um container em grid do Bootstrap
+            var row = document.createElement('div');
+            row.className = 'row mt-2 g-2';
+            
+            var colGoogle = document.createElement('div');
+            colGoogle.className = 'col-12 col-md-6';
+            
+            var colGov = document.createElement('div');
+            colGov.className = 'col-12 col-md-6';
+            
+            // Remove a margem superior individual e garante largura total
+            googleBtn.classList.remove('mt-2');
+            govBtn.classList.remove('mt-2');
+            googleBtn.classList.add('w-100');
+            govBtn.classList.add('w-100');
+            
+            // Move os botões para suas colunas
+            colGoogle.appendChild(googleBtn);
+            colGov.appendChild(govBtn);
+            
+            row.appendChild(colGoogle);
+            row.appendChild(colGov);
+            
+            // Adiciona a linha ao container do Google e remove o wrapper do govbrsso (e seu "OU" extra)
+            googleContainer.appendChild(row);
+            wrapper.remove();
+            return;
+        }
+    }
+    
+    // Fallback: se o googlesso não for encontrado, mantém o comportamento original (abaixo do formulário)
+    var form = document.querySelector('form[action*="login.php"], form.login-form');
+    var googleBtnFallback = document.querySelector('a[href*="oauth" i], a.oauth-button, a[href*="Google" i]');
+    
+    if (googleBtnFallback) {
+        var container = googleBtnFallback.closest('div');
         if (container && container.parentNode) {
             container.parentNode.appendChild(wrapper);
         }
