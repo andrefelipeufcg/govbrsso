@@ -1,0 +1,188 @@
+<?php
+
+namespace GlpiPlugin\Govbr;
+
+use Config as GlpiConfig;
+use GLPIKey;
+use Html;
+
+/**
+ * Configuração do plugin gov.br.
+ *
+ * Usa a API de configuração do GLPI (glpi_configs, contexto 'plugin:govbr'),
+ * evitando tabelas próprias. O client_secret é guardado cifrado com a chave do
+ * GLPI (GLPIKey).
+ *
+ * @license GPLv3+
+ */
+final class Config
+{
+    /** Contexto de configuração no GLPI. */
+    public const CONTEXT = 'plugin:govbr';
+
+    /** Nome da variável SSO dedicada criada na instalação. */
+    public const SSO_VARIABLE_NAME = 'HTTP_GOVBR_REMOTE_USER';
+
+    /** Defaults de homologação. */
+    private const DEFAULTS = [
+        'provider_url'  => 'https://sso.staging.acesso.gov.br',
+        'client_id'     => '',
+        'client_secret' => '', // armazenado cifrado
+        'scopes'        => 'openid email profile govbr_confiabilidades govbr_confiabilidades_idtoken',
+        'login_field'   => 'cpf',   // 'cpf' (sub) ou 'email'
+        'auto_create'   => '1',     // criar usuário no primeiro login
+        'min_level'     => '',      // '', 'bronze', 'silver', 'gold' — barra abaixo deste nível
+        'is_active'     => '0',
+    ];
+
+    /** @return array<string,string> */
+    public static function getAll(): array
+    {
+        $values = GlpiConfig::getConfigurationValues(self::CONTEXT);
+        return array_merge(self::DEFAULTS, is_array($values) ? $values : []);
+    }
+
+    public static function get(string $key, ?string $default = null): ?string
+    {
+        $all = self::getAll();
+        return $all[$key] ?? $default;
+    }
+
+    /** client_secret decifrado (vazio se não definido). */
+    public static function getClientSecret(): string
+    {
+        $enc = (string) self::get('client_secret', '');
+        if ($enc === '') {
+            return '';
+        }
+        if (class_exists(GLPIKey::class)) {
+            try {
+                return (string) (new GLPIKey())->decrypt($enc);
+            } catch (\Throwable) {
+                return '';
+            }
+        }
+        return $enc;
+    }
+
+    /**
+     * Persiste a configuração. Cifra o secret quando um novo valor for enviado.
+     *
+     * @param array<string,string> $input
+     */
+    public static function save(array $input): void
+    {
+        $allowed = array_keys(self::DEFAULTS);
+        $to_save = [];
+
+        foreach ($allowed as $key) {
+            if (!array_key_exists($key, $input)) {
+                continue;
+            }
+            $value = trim((string) $input[$key]);
+
+            if ($key === 'client_secret') {
+                if ($value === '') {
+                    continue; // não sobrescreve o secret existente com vazio
+                }
+                if (class_exists(GLPIKey::class)) {
+                    $value = (new GLPIKey())->encrypt($value);
+                }
+            }
+            $to_save[$key] = $value;
+        }
+
+        if ($to_save !== []) {
+            GlpiConfig::setConfigurationValues(self::CONTEXT, $to_save);
+        }
+    }
+
+    public static function installDefaults(): void
+    {
+        $existing = GlpiConfig::getConfigurationValues(self::CONTEXT);
+        if (!is_array($existing) || $existing === []) {
+            GlpiConfig::setConfigurationValues(self::CONTEXT, self::DEFAULTS);
+        }
+    }
+
+    public static function removeAll(): void
+    {
+        GlpiConfig::deleteConfigurationValues(self::CONTEXT, array_keys(self::DEFAULTS));
+    }
+
+    public static function isActive(): bool
+    {
+        return self::get('is_active') === '1' && self::get('client_id') !== '';
+    }
+
+    // ---- Endpoints derivados do provider_url ----
+
+    private static function base(): string
+    {
+        return rtrim((string) self::get('provider_url'), '/');
+    }
+
+    public static function authorizeUrl(): string
+    {
+        return self::base() . '/authorize';
+    }
+
+    public static function tokenUrl(): string
+    {
+        return self::base() . '/token';
+    }
+
+    public static function jwkUrl(): string
+    {
+        return self::base() . '/jwk';
+    }
+
+    public static function userinfoUrl(): string
+    {
+        return self::base() . '/userinfo/';
+    }
+
+    public static function logoutUrl(): string
+    {
+        return self::base() . '/logout';
+    }
+
+    /** URL de callback que deve ser cadastrada na credencial gov.br. */
+    public static function callbackUrl(): string
+    {
+        global $CFG_GLPI;
+        return $CFG_GLPI['url_base'] . '/plugins/govbr/front/callback.php';
+    }
+
+    /** URL de início do fluxo (alvo do botão). */
+    public static function startUrl(): string
+    {
+        global $CFG_GLPI;
+        return $CFG_GLPI['root_doc'] . '/plugins/govbr/front/redirect.php';
+    }
+
+    /** URL de logout do plugin (para cadastrar como "URL de Log Out"). */
+    public static function pluginLogoutUrl(): string
+    {
+        global $CFG_GLPI;
+        return $CFG_GLPI['url_base'] . '/plugins/govbr/front/logout.php';
+    }
+
+    /** Botão "Entrar com gov.br" para a tela de login. */
+    public static function renderLoginButton(): string
+    {
+        if (!self::isActive()) {
+            return '';
+        }
+        $url = Html::cleanInputText(self::startUrl());
+
+        return <<<HTML
+<div class="govbr-login-wrapper">
+  <a href="{$url}" class="govbr-signin" role="button" aria-label="Entrar com gov.br">
+    <span class="govbr-signin__text">Entrar com</span>
+    <span class="govbr-signin__brand">gov.br</span>
+  </a>
+</div>
+HTML;
+    }
+}
