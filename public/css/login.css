@@ -6,27 +6,43 @@
   gap: 8px;
   height: 40px;
   padding: 0 16px;
-  border-radius: 100px;
-  background: #1351b4;
-  color: #fff;
-  font-weight: 600;
-  font-size: 16px;
+  border-radius: 4px; /* Borda mais quadrada, padrão de botões modernos */
+  background: #ffffff;
+  color: #3c4043; /* Texto escuro para dar contraste no fundo branco */
+  font-weight: 500;
+  font-size: 15px;
   line-height: 1;
   text-decoration: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
-  transition: background .15s ease;
+  border: 1px solid #dadce0; /* Borda sutil cinza */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
 
-.govbrsso-signin:hover { background: #0c326f; }
-.govbrsso-signin:active { background: #0a2a5c; }
-.govbrsso-signin:focus-visible { outline: 3px solid #c5d4eb; outline-offset: 2px; }
+/* Hover: Fundo cinza e texto mais escuro */
+.govbrsso-signin:hover { 
+  background: #f8f9fa; 
+  color: #202124;
+  border-color: #d2e3fc; /* Um toque de azul na borda no hover (opcional) */
+  text-decoration: none;
+}
 
-.govbrsso-signin__text { font-weight: 400; }
+.govbrsso-signin:active { 
+  background: #f1f3f4; 
+}
+
+.govbrsso-signin:focus-visible { 
+  outline: 2px solid #1351b4; 
+  outline-offset: 2px; 
+}
+
+.govbrsso-signin__text { 
+  font-weight: 500; 
+}
 
 .govbrsso-signin__brand {
   font-weight: 800;
-  background: #fff;
-  color: #1351b4;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 17px;
+  color: #1351b4; /* O azul característico do gov.br */
+  background: transparent;
+  padding: 0;
 }

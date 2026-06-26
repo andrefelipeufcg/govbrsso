@@ -191,7 +191,9 @@ final class Config
   </div>
   <a href="{$url}" class="govbrsso-signin w-100 justify-content-center mt-2" role="button" aria-label="Entrar com gov.br">
     <span class="govbrsso-signin__text">Entrar com</span>
-    <span class="govbrsso-signin__brand">gov.br</span>
+    <span class="govbrsso-signin__brand">
+      <span style="color:#1351b4">g</span><span style="color:#fcc400">o</span><span style="color:#00a859">v</span><span style="color:#1351b4">.b</span><span style="color:#fcc400">r</span>
+    </span>
   </a>
 </div>
 <script>
