@@ -74,3 +74,9 @@ Ao integrar este plugin, o órgão torna-se responsável pelo tratamento dos dad
 ## Licença
 
 GPLv3+
+
+## Autores / Contribuidores
+
+Este plugin foi desenvolvido em conjunto por:
+* **Daniel Ramos** - [@danielrramos](https://github.com/danielrramos)
+* **Andre Felipe** - [@andrefelipeufcg](https://github.com/andrefelipeufcg)
