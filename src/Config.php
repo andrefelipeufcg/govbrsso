@@ -189,7 +189,7 @@ final class Config
       <span class="mx-3 text-secondary text-uppercase small">OU</span>
       <hr class="flex-grow-1 m-0">
   </div>
-  <a href="{$url}" class="govbrsso-signin w-100 justify-content-center mt-2" role="button" aria-label="Entrar com gov.br">
+  <a href="{$url}" class="btn btn-outline-secondary w-100 mt-2 d-flex align-items-center justify-content-center" style="gap: 8px;" role="button" aria-label="Entrar com gov.br">
     <span class="govbrsso-signin__text">Entrar com</span>
     <span class="govbrsso-signin__brand">
       <span style="color:#1351b4">g</span><span style="color:#fcc400">o</span><span style="color:#00a859">v</span><span style="color:#1351b4">.b</span><span style="color:#fcc400">r</span>
