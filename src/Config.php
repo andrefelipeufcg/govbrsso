@@ -77,9 +77,15 @@ final class Config
 
         foreach ($allowed as $key) {
             if (!array_key_exists($key, $input)) {
-                continue;
+                // O HTML não envia checkboxes desmarcadas no POST
+                if (in_array($key, ['auto_create', 'is_active'], true)) {
+                    $value = '0';
+                } else {
+                    continue;
+                }
+            } else {
+                $value = trim((string) $input[$key]);
             }
-            $value = trim((string) $input[$key]);
 
             if ($key === 'client_secret') {
                 if ($value === '') {
