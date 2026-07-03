@@ -59,7 +59,7 @@ final class Config
             try {
                 return (string) (new GLPIKey())->decrypt($enc);
             } catch (\Throwable) {
-                return '';
+                return $enc;
             }
         }
         return $enc;
@@ -157,7 +157,7 @@ final class Config
     public static function callbackUrl(): string
     {
         global $CFG_GLPI;
-        return $CFG_GLPI['url_base'] . '/plugins/govbrsso/front/callback.php';
+        return rtrim($CFG_GLPI['url_base'], '/') . '/plugins/govbrsso/front/callback.php';
     }
 
     /** URL de início do fluxo (alvo do botão). */
@@ -171,7 +171,7 @@ final class Config
     public static function pluginLogoutUrl(): string
     {
         global $CFG_GLPI;
-        return $CFG_GLPI['url_base'] . '/plugins/govbrsso/front/logout.php';
+        return rtrim($CFG_GLPI['url_base'], '/') . '/plugins/govbrsso/front/logout.php';
     }
 
     /** Botão "Entrar com gov.br" para a tela de login. */

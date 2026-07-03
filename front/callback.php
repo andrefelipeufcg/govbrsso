@@ -37,7 +37,6 @@ if ($code === '' || $state === '' || !hash_equals($expectedState, $state)) {
 $verifier = (string) ($_SESSION['govbrsso_code_verifier'] ?? '');
 unset($_SESSION['govbrsso_state'], $_SESSION['govbrsso_code_verifier']);
 
-// Troca code -> tokens.
 $token = Client::requestToken(
     (string) Config::get('client_id'),
     Config::getClientSecret(),
@@ -47,9 +46,19 @@ $token = Client::requestToken(
 );
 
 if (isset($token['error']) || empty($token['access_token'])) {
-    $desc = (string) ($token['error_description'] ?? $token['error'] ?? 'sem access_token');
-    Toolbox::logInFile('govbrsso', 'Erro no /token: ' . $desc . "\n", true);
-    Html::displayErrorAndDie('Falha ao obter o token de acesso do gov.br.');
+    $debug = [
+        'client_id' => Config::get('client_id'),
+        'client_secret_length' => strlen(Config::getClientSecret()),
+        'redirect_uri' => Config::callbackUrl(),
+        'code_verifier' => $verifier,
+        'code_challenge_sent_in_auth' => Client::codeChallenge($verifier),
+        'token_response' => $token,
+    ];
+    echo "<h2>Erro ao obter Token do Gov.br</h2>";
+    echo "<pre style='background:#f4f4f4; padding:10px; border:1px solid #ccc;'>";
+    print_r($debug);
+    echo "</pre>";
+    die();
 }
 
 $accessToken = (string) $token['access_token'];

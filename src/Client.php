@@ -83,6 +83,11 @@ final class Client
         string $redirectUri,
         string $codeVerifier,
     ): array {
+        $clientId = trim($clientId);
+        $clientSecret = trim($clientSecret);
+        $redirectUri = trim($redirectUri);
+        $codeVerifier = trim($codeVerifier);
+
         $body = http_build_query([
             'grant_type'    => 'authorization_code',
             'code'          => $code,
@@ -90,6 +95,9 @@ final class Client
             'code_verifier' => $codeVerifier,
         ], '', '&', PHP_QUERY_RFC3986);
 
+        // Gov.br exige Basic Auth para clientes confidenciais.
+        // A RFC 6749 recomenda urlencode, mas o Keycloak do Gov.br geralmente
+        // espera as credenciais puras antes do base64.
         $basic = base64_encode($clientId . ':' . $clientSecret);
 
         [$status, $resp] = self::http('POST', Config::tokenUrl(), $body, [
@@ -287,14 +295,23 @@ final class Client
     private static function http(string $method, string $url, ?string $body, array $headers): array
     {
         $ch = curl_init($url);
-        curl_setopt_array($ch, [
+        
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST  => $method,
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_TIMEOUT        => 20,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
-        ]);
+        ];
+
+        if (strtoupper($method) === 'POST') {
+            $options[CURLOPT_POST] = true;
+        } else {
+            $options[CURLOPT_CUSTOMREQUEST] = $method;
+        }
+
+        curl_setopt_array($ch, $options);
+
         if ($body !== null) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         }
