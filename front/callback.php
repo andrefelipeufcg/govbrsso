@@ -11,6 +11,7 @@
 use GlpiPlugin\Govbrsso\Client;
 use GlpiPlugin\Govbrsso\Config;
 use GlpiPlugin\Govbrsso\UserManager;
+use User;
 
 include(__DIR__ . '/../../../inc/includes.php');
 
@@ -86,6 +87,22 @@ unset($_SESSION['govbrsso_nonce']);
 // Complementa com /userinfo (fonte autoritativa dos dados do cidadão).
 $userinfo = Client::userinfo($accessToken);
 $claims   = array_merge($claims, array_filter($userinfo, static fn ($v) => $v !== null && $v !== ''));
+
+// Se o usuário não existir e formos criar automaticamente, precisamos garantir que ele tem e-mail (para as regras de domínio)
+
+$cpf   = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';
+$email = isset($claims['email']) ? trim((string) $claims['email']) : '';
+$emailVerified = ($claims['email_verified'] ?? false) === true || ($claims['email_verified'] ?? '') === 'true';
+$loginField = (string) Config::get('login_field', 'cpf');
+$login = $loginField === 'email' ? ($emailVerified && $email !== '' ? $email : $cpf) : $cpf;
+
+$user = new User();
+$found = $user->getFromDBbyName($login);
+
+if (!$found && Config::get('auto_create') === '1' && $email === '') {
+    $_SESSION['govbrsso_pending_claims'] = $claims;
+    Html::redirect($CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/collect_email.php');
+}
 
 // Efetua o login no GLPI.
 $result = UserManager::loginFromClaims($claims);

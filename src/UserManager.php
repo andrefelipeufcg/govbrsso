@@ -58,8 +58,40 @@ final class UserManager
                 'comment'  => 'Criado via Login Único gov.br',
             ];
             if ($emailVerified && $email !== '') {
-                $input['_useremails'] = [$email];
+                $input['_useremails'] = [-1 => $email];
             }
+
+            // --- Lógica de Regras de Domínio ---
+            $domain = '';
+            if ($email !== '') {
+                $domain = strtolower(substr(strrchr($email, '@'), 1));
+            }
+            
+            $profile_id = 0;
+            $entity_id  = 0;
+            
+            $domainRules = json_decode((string)Config::get('domain_rules', '[]'), true) ?: [];
+            
+            foreach ($domainRules as $rule) {
+                if ($domain === $rule['domain'] || str_ends_with($domain, '.' . $rule['domain'])) {
+                    $profile_id = (int)$rule['profile_id'];
+                    $entity_id  = (int)$rule['entity_id'];
+                    break;
+                }
+            }
+            
+            if ($profile_id === 0) {
+                $profile_id = (int)Config::get('default_profile_id', '0');
+                $entity_id  = (int)Config::get('default_entity_id', '0');
+            }
+            
+            if ($profile_id > 0) {
+                $input['_profiles_id']  = $profile_id;
+                $input['_entities_id']  = $entity_id;
+                $input['_is_recursive'] = 1;
+            }
+            // -----------------------------------
+
             $id = $user->add($input);
             if (!$id) {
                 return ['ok' => false, 'error' => 'Falha ao criar o usuário no GLPI.'];

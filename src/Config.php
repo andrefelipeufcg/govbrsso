@@ -33,6 +33,9 @@ final class Config
         'auto_create'   => '1',     // criar usuário no primeiro login
         'min_level'     => '',      // '', 'bronze', 'silver', 'gold' — barra abaixo deste nível
         'is_active'     => '0',
+        'default_profile_id' => '0',
+        'default_entity_id'  => '0',
+        'domain_rules'       => '[]',
     ];
 
     /** @return array<string,string> */
@@ -97,6 +100,23 @@ final class Config
             }
             $to_save[$key] = $value;
         }
+
+        // Processa regras de domínio dinâmicas
+        $rules = [];
+        if (isset($input['domain_rule_domain']) && is_array($input['domain_rule_domain'])) {
+            foreach ($input['domain_rule_domain'] as $idx => $domain) {
+                $domain = strtolower(trim((string)$domain));
+                $domain = ltrim($domain, '@');
+                if ($domain !== '') {
+                    $rules[] = [
+                        'domain'     => $domain,
+                        'profile_id' => (int)($input['domain_rule_profile_id'][$idx] ?? 0),
+                        'entity_id'  => (int)($input['domain_rule_entity_id'][$idx] ?? 0),
+                    ];
+                }
+            }
+        }
+        $to_save['domain_rules'] = json_encode($rules);
 
         if ($to_save !== []) {
             GlpiConfig::setConfigurationValues(self::CONTEXT, $to_save);

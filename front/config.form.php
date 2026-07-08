@@ -44,6 +44,37 @@ $selLevel = static fn (string $v): string => ($c['min_level'] ?? '') === $v ? 's
 
 $formAction = $_SERVER['REQUEST_URI'];
 
+global $DB;
+$profilesOptions = '<option value="0">---</option>';
+foreach ($DB->request('glpi_profiles') as $p) {
+    $profilesOptions .= sprintf('<option value="%d">%s</option>', $p['id'], Html::cleanInputText($p['name']));
+}
+
+$entitiesOptions = '<option value="0">---</option>';
+foreach ($DB->request('glpi_entities') as $e) {
+    $entitiesOptions .= sprintf('<option value="%d">%s</option>', $e['id'], Html::cleanInputText($e['completename']));
+}
+
+$domainRules = json_decode($c['domain_rules'] ?? '[]', true) ?: [];
+$domainRulesHtml = '';
+foreach ($domainRules as $rule) {
+    $profOpts = str_replace('value="' . $rule['profile_id'] . '"', 'value="' . $rule['profile_id'] . '" selected', $profilesOptions);
+    $entOpts  = str_replace('value="' . $rule['entity_id'] . '"', 'value="' . $rule['entity_id'] . '" selected', $entitiesOptions);
+    
+    $domain = Html::cleanInputText($rule['domain']);
+    $domainRulesHtml .= <<<TR
+    <tr>
+        <td><input type="text" name="domain_rule_domain[]" value="{$domain}" style="width:100%" required></td>
+        <td><select name="domain_rule_profile_id[]" style="width:100%" required>{$profOpts}</select></td>
+        <td><select name="domain_rule_entity_id[]" style="width:100%" required>{$entOpts}</select></td>
+        <td style="text-align:center;"><button type="button" class="btn-remove-rule" style="color:red; font-weight:bold; cursor:pointer;">X</button></td>
+    </tr>
+TR;
+}
+
+$defProfOpts = str_replace('value="' . (int)($c['default_profile_id'] ?? 0) . '"', 'value="' . (int)($c['default_profile_id'] ?? 0) . '" selected', $profilesOptions);
+$defEntOpts  = str_replace('value="' . (int)($c['default_entity_id'] ?? 0) . '"', 'value="' . (int)($c['default_entity_id'] ?? 0) . '" selected', $entitiesOptions);
+
 echo <<<HTML
 <div class="card" style="max-width:820px;margin:1rem auto;padding:1rem">
 <h2>Login Único gov.br</h2>
@@ -100,8 +131,41 @@ echo <<<HTML
       <option value="gold" {$selLevel('gold')}>Ouro</option>
     </select></label></p>
 
-  <p><label><input type="checkbox" name="auto_create" value="1" {$autocreate}>
+  <p><label><input type="checkbox" name="auto_create" id="auto_create_chk" value="1" {$autocreate}>
     Criar usuário automaticamente no primeiro login</label></p>
+
+  <div id="domain_rules_section" style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+    <h4>Regras de Perfil e Entidade por Domínio</h4>
+    <p style="font-size: 0.9em; color: #666;">Adicione regras para definir qual perfil e entidade o usuário receberá com base em seu domínio de e-mail.</p>
+    
+    <table class="tab_cadre_fixe" id="domain-rules-table" style="width: 100%; margin-bottom: 10px;">
+        <thead>
+            <tr class="headerRow">
+                <th>Domínio (depois do @)</th>
+                <th>Perfil</th>
+                <th>Entidade</th>
+                <th style="width: 40px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {$domainRulesHtml}
+        </tbody>
+    </table>
+    <button type="button" id="btn-add-rule" style="margin-bottom: 20px;">+ Adicionar Regra</button>
+
+    <hr style="margin: 20px 0;">
+
+    <h4>Regra Padrão (Fallback)</h4>
+    <p style="font-size: 0.9em; color: #666;">Se o e-mail do usuário não corresponder a nenhuma das regras acima, este perfil e entidade serão usados. Obrigatório se a criação automática estiver ativada.</p>
+    <p>
+        <label style="display:inline-block; width:150px;">Perfil Padrão (ELSE):</label>
+        <select name="default_profile_id">{$defProfOpts}</select>
+    </p>
+    <p>
+        <label style="display:inline-block; width:150px;">Entidade Padrão (ELSE):</label>
+        <select name="default_entity_id">{$defEntOpts}</select>
+    </p>
+  </div>
 
   <p><label><input type="checkbox" name="is_active" value="1" {$active}>
     Ativar o botão "Entrar com gov.br"</label></p>
@@ -109,6 +173,36 @@ echo <<<HTML
   <p><button type="submit" name="save_config" class="btn btn-primary">Salvar</button></p>
 </form>
 </div>
+
+<script>
+$(function() {
+    function toggleDomainRules() {
+        if ($('#auto_create_chk').is(':checked')) {
+            $('#domain_rules_section').show();
+        } else {
+            $('#domain_rules_section').hide();
+        }
+    }
+    
+    $('#auto_create_chk').on('change', toggleDomainRules);
+    toggleDomainRules();
+
+    $('#btn-add-rule').on('click', function() {
+        var newRow = `
+        <tr>
+            <td><input type="text" name="domain_rule_domain[]" style="width:100%" placeholder="ex: aluno.edu.br" required></td>
+            <td><select name="domain_rule_profile_id[]" style="width:100%" required>{$profilesOptions}</select></td>
+            <td><select name="domain_rule_entity_id[]" style="width:100%" required>{$entitiesOptions}</select></td>
+            <td style="text-align:center;"><button type="button" class="btn-remove-rule" style="color:red; font-weight:bold; cursor:pointer;">X</button></td>
+        </tr>`;
+        $('#domain-rules-table tbody').append(newRow);
+    });
+
+    $('#domain-rules-table').on('click', '.btn-remove-rule', function() {
+        $(this).closest('tr').remove();
+    });
+});
+</script>
 HTML;
 
 Html::footer();
