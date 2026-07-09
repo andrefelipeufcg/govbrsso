@@ -221,34 +221,15 @@ document.addEventListener('DOMContentLoaded', function() {
     var wrapper = document.getElementById('govbrsso-login-wrapper');
     if (!wrapper) return;
     
-    // Procura por botões genéricos de outros plugins SSO para tentar ficar junto deles
-    var ssoBtn = document.querySelector('a[href*="oauth" i], a.oauth-button, a[href*="Google" i]');
-    var form = document.querySelector('form[action*="login.php"], form.login-form');
-    
-    if (ssoBtn) {
-        // Encontra o container raiz do botão SSO (geralmente uma div com mt-3 ou id que remete a container)
-        var container = ssoBtn.closest('div[id*="container"], div.text-center, div.mt-3');
-        if (!container) container = ssoBtn.parentElement;
-        
-        if (container && container.parentNode) {
-            // Insere o nosso wrapper logo APÓS o container do outro plugin, para ficarem um abaixo do outro
-            if (container.nextSibling) {
-                container.parentNode.insertBefore(wrapper, container.nextSibling);
-            } else {
-                container.parentNode.appendChild(wrapper);
-            }
-            return;
-        }
+    // Procura o conteiner principal do formulário de login no GLPI 10/11
+    var target = document.querySelector('.col-md-5');
+    if (!target) {
+        // Fallbacks caso o tema tenha mudado
+        target = document.querySelector('.login_card, .login-box, .card-body, form[action*="login.php"]');
     }
     
-    // Fallback: se não achar outro SSO, insere no fim do formulário
-    if (form) {
-        form.appendChild(wrapper);
-    } else {
-        var loginCard = document.querySelector('.login_card, .login-box, .card-body');
-        if (loginCard) {
-            loginCard.appendChild(wrapper);
-        }
+    if (target) {
+        target.appendChild(wrapper);
     }
 });
 </script>
