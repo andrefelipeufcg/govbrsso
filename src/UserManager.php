@@ -38,7 +38,13 @@ final class UserManager
         // Verificação opcional de nível mínimo de confiabilidade.
         $minLevel = (string) Config::get('min_level', '');
         if ($minLevel !== '' && !self::meetsLevel($claims, $minLevel)) {
-            return ['ok' => false, 'error' => "Conta gov.br não atinge o nível mínimo exigido ($minLevel)."];
+            $levelNames = [
+                'gold'   => 'OURO',
+                'silver' => 'PRATA',
+                'bronze' => 'BRONZE'
+            ];
+            $levelPt = $levelNames[$minLevel] ?? strtoupper($minLevel);
+            return ['ok' => false, 'error' => "Sua conta gov.br não atinge o nível mínimo exigido ($levelPt)."];
         }
 
         $loginField = (string) Config::get('login_field', 'cpf');
