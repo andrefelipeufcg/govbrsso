@@ -160,12 +160,12 @@ echo <<<HTML
                     Adicione regras para definir qual perfil e entidade o usuário receberá com base em seu domínio de e-mail (Opcional).
                 </div>
                 
-                <table class="table table-sm table-bordered" id="domain-rules-table">
+                <table class="table table-sm table-bordered" id="domain-rules-table" style="table-layout: fixed;">
                     <thead>
                         <tr>
-                            <th>Domínio (depois do @)</th>
-                            <th>Perfil</th>
-                            <th>Entidade</th>
+                            <th style="width: 33%;">Domínio (depois do @)</th>
+                            <th style="width: 33%;">Perfil</th>
+                            <th style="width: 33%;">Entidade</th>
                             <th style="width: 50px;"></th>
                         </tr>
                     </thead>
