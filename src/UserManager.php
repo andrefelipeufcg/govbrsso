@@ -175,21 +175,39 @@ final class UserManager
         return ['ok' => true, 'error' => ''];
     }
 
-    /**
-     * Verifica o nível de confiabilidade mínimo a partir de reliability_info.
-     *
-     * @param array<string,mixed> $claims
-     */
     private static function meetsLevel(array $claims, string $min): bool
     {
         $order = ['bronze' => 1, 'silver' => 2, 'gold' => 3];
         $level = '';
-        if (isset($claims['reliability_info']['level'])) {
+
+        // Tenta obter o nível pelo array AMR (padrão atual do gov.br)
+        if (isset($claims['amr'])) {
+            $amr = is_array($claims['amr']) ? $claims['amr'] : explode(',', $claims['amr']);
+            if (in_array('govbr_nivel_ouro', $amr, true)) {
+                $level = 'gold';
+            } elseif (in_array('govbr_nivel_prata', $amr, true)) {
+                $level = 'silver';
+            } elseif (in_array('govbr_nivel_bronze', $amr, true)) {
+                $level = 'bronze';
+            }
+        }
+
+        // Fallback para reliability_info (caso exista ou formato antigo)
+        if ($level === '' && isset($claims['reliability_info']['level'])) {
             $level = strtolower((string) $claims['reliability_info']['level']);
         }
-        if ($level === '' || !isset($order[$level], $order[$min])) {
+        
+        // Todo usuário autenticado no gov.br possui, no mínimo, nível bronze.
+        // Se a API não retornou o nível explicitamente, assumimos bronze para que
+        // não bloqueie quem configurou o mínimo como "bronze".
+        if ($level === '') {
+            $level = 'bronze';
+        }
+
+        if (!isset($order[$level], $order[$min])) {
             return false;
         }
+        
         return $order[$level] >= $order[$min];
     }
 }
