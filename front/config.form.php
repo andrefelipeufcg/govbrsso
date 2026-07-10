@@ -174,7 +174,7 @@ echo <<<HTML
                     </tbody>
                 </table>
                 <button type="button" class="btn btn-sm btn-outline-secondary mb-3" id="btn-add-rule">
-                    <i class="fas fa-plus"></i> Adicionar Regra
+                    <i class="fas fa-plus"></i>&nbsp;&nbsp;Adicionar Regra
                 </button>
 
                 <table style="display:none;">
@@ -219,7 +219,7 @@ echo <<<HTML
 
             <div class="text-end">
                 <button type="submit" name="save_config" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Salvar
+                    <i class="fas fa-save"></i>&nbsp;&nbsp;Salvar
                 </button>
             </div>
         </form>
