@@ -67,7 +67,7 @@ foreach ($domainRules as $rule) {
         <td><input type="text" name="domain_rule_domain[]" value="{$domain}" class="form-control" required></td>
         <td><select name="domain_rule_profile_id[]" class="form-select searchable-select" required>{$profOpts}</select></td>
         <td><select name="domain_rule_entity_id[]" class="form-select searchable-select" required>{$entOpts}</select></td>
-        <td style="text-align:center;"><button type="button" class="btn btn-outline-danger btn-sm btn-remove-rule" title="Remover"><i class="fas fa-trash"></i></button></td>
+        <td style="text-align:center; vertical-align:middle;"><button type="button" class="btn btn-outline-danger btn-sm btn-remove-rule" title="Remover"><i class="fas fa-trash"></i></button></td>
     </tr>
 TR;
 }
@@ -183,7 +183,7 @@ echo <<<HTML
                         <td><input type="text" name="domain_rule_domain[]" class="form-control" placeholder="ex: aluno.edu.br" required disabled></td>
                         <td><select name="domain_rule_profile_id[]" class="form-select" required disabled>{$profilesOptions}</select></td>
                         <td><select name="domain_rule_entity_id[]" class="form-select" required disabled>{$entitiesOptions}</select></td>
-                        <td style="text-align:center;"><button type="button" class="btn btn-outline-danger btn-sm btn-remove-rule" title="Remover"><i class="fas fa-trash"></i></button></td>
+                        <td style="text-align:center; vertical-align:middle;"><button type="button" class="btn btn-outline-danger btn-sm btn-remove-rule" title="Remover"><i class="fas fa-trash"></i></button></td>
                     </tr>
                     </tbody>
                 </table>
