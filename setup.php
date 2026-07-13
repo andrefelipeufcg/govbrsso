@@ -77,7 +77,7 @@ function plugin_version_govbrsso(): array
         'version'      => PLUGIN_GOVBRSSO_VERSION,
         'author'       => 'Daniel Ramos, Andre Felipe',
         'license'      => 'GPLv3+',
-        'homepage'     => 'https://acesso.gov.br/roteiro-tecnico/',
+        'homepage'     => 'https://github.com/andrefelipeufcg/govbrsso',
         'requirements' => [
             'glpi' => [
                 'min' => PLUGIN_GOVBRSSO_MIN_GLPI,

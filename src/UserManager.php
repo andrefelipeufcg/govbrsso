@@ -149,9 +149,9 @@ final class UserManager
         }
 
         try {
-            // Marcador leve para o plugin authhistory identificar o provedor SSO.
+            // Marcador leve (em $_SERVER para sobreviver ao Session::init que limpa a $_SESSION).
             // Se authhistory não estiver instalado, a variável é simplesmente ignorada.
-            $_SESSION['authhistory_sso_provider'] = 'govbr';
+            $_SERVER['AUTHHISTORY_SSO_PROVIDER'] = 'govbr';
 
             $auth = new Auth();
             $ok = $auth->login($login, '', false);
