@@ -149,12 +149,34 @@ final class UserManager
         }
 
         try {
-            // Marcador leve (em $_SERVER para sobreviver ao Session::init que limpa a $_SESSION).
-            // Se authhistory não estiver instalado, a variável é simplesmente ignorada.
-            $_SERVER['AUTHHISTORY_SSO_PROVIDER'] = 'govbr';
-
             $auth = new Auth();
             $ok = $auth->login($login, '', false);
+
+            if ($ok) {
+                // Atualiza o evento de login recém-criado pelo Auth::login()
+                // para incluir a tag SSO e o ID do usuário (items_id), independentemente
+                // de o plugin authhistory estar ativado ou não.
+                global $DB;
+                $users_id = \Session::getLoginUserID();
+                if ($users_id) {
+                    $iterator = $DB->request([
+                        'FROM'  => 'glpi_events',
+                        'WHERE' => ['service' => 'login'],
+                        'ORDER' => 'id DESC',
+                        'LIMIT' => 1
+                    ]);
+                    if (count($iterator) > 0) {
+                        $event = $iterator->current();
+                        $message = $event['message'];
+                        if (strpos($message, 'via Gov.BR (SSO)') === false) {
+                            $DB->update('glpi_events', [
+                                'items_id' => $users_id,
+                                'message'  => ltrim($message) . ' via Gov.BR (SSO)'
+                            ], ['id' => $event['id']]);
+                        }
+                    }
+                }
+            }
         } finally {
             // Limpeza do contexto temporário (em qualquer caso).
             $CFG_GLPI['ssovariables_id'] = $origSso;
