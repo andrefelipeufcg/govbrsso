@@ -10,7 +10,10 @@ O plugin adiciona um botão **"Entrar com gov.br"** na tela de login, conduz o f
 - **Integração Visual Inteligente**: O botão utiliza as cores exatas (Azul, Verde, Amarelo) e a tipografia padrão do gov.br. Além disso, introduz uma arquitetura de layout moderna via **CSS Grid** (`display: contents`) que alinha botões SSO lado a lado no Desktop de forma nativa e sem acoplamento entre os plugins. No mobile, eles ficam perfeitamente empilhados.
 - **Baixo Acoplamento**: Renderiza via gancho nativo do GLPI (`display_login`) apoiado por um pequeno script autônomo que assegura o posicionamento correto do botão logo abaixo do formulário.
 - **Pronto para Marketplace**: Estrutura contendo metadados oficiais (`govbrsso.xml`) e logo, facilitando sua eventual listagem oficial no diretório do GLPI.
-- **Níveis de Confiabilidade**: Permite barrar acessos baseados nos níveis Bronze, Prata ou Ouro.
+- **Níveis de Confiabilidade**: Permite barrar acessos baseados nos níveis Bronze, Prata ou Ouro (suporte às claims `amr` e `reliability_info`).
+- **Atribuição Automática de Perfil/Entidade (Regras de Domínio)**: Mapeia domínios de e-mail (ex: `@instituicao.edu.br`) para perfis e entidades específicos durante a criação da conta, com suporte a regra padrão (fallback).
+- **Coleta de E-mail**: Tela intermediária automática que solicita o e-mail institucional no primeiro acesso, caso o usuário não o tenha compartilhado pelo gov.br.
+- **Rastreabilidade Aprimorada**: Registra a origem "via Gov.BR (SSO)" no log de eventos nativo de login do GLPI.
 
 ## Requisitos
 
@@ -39,22 +42,29 @@ Na página do plugin você verá duas URLs geradas automaticamente — cadastre-
 | client_id / client_secret | Da credencial gov.br (o secret é guardado de forma segura, cifrado com a GLPIKey) |
 | Escopos | Padrão recomendado: `openid email profile govbr_confiabilidades govbr_confiabilidades_idtoken` |
 | Campo de login do GLPI | `CPF` (claim `sub`) ou `E-mail` |
-| Nível mínimo | Barra contas abaixo de Bronze/Prata/Ouro (através da validação `reliability_info`) |
+| Nível mínimo | Barra contas abaixo de Bronze/Prata/Ouro (através das claims `amr` ou `reliability_info`) |
 | Criar usuário | Cria a conta local no GLPI no primeiro acesso via gov.br (se marcado) |
+| Regras de Domínio | Define perfil e entidade baseados no domínio de e-mail (ex: `aluno.edu.br`) no momento da criação |
+| Regra Padrão (Fallback) | Perfil e entidade padrão para novos usuários que não se enquadram nas regras de domínio |
 | Ativar botão | Exibe e habilita o botão na tela de login |
 
-## Regra de habilitação (obrigatória)
+## Atribuição de Habilitações
 
-O SSO do gov.br **apenas autentica** o usuário. Após o primeiro login, o GLPI precisa conceder um perfil e uma entidade, caso contrário o acesso será negado.
-Crie ao menos uma regra em **Administração > Regras > Regras de atribuição de habilitações a um usuário**.
-Exemplo: Se o usuário foi autenticado externamente, ele recebe o perfil *Self-Service* na entidade raiz.
+Após o primeiro login via gov.br, o GLPI precisa conceder um perfil e uma entidade ao usuário, caso contrário o acesso será negado. Você tem duas opções para gerenciar isso:
+
+1. **Via Regras de Domínio do Plugin (Recomendado):**
+   Nas configurações do próprio plugin, ao ativar a "Criação de usuário automática", você pode definir mapeamentos de perfil e entidade baseados no domínio do e-mail do usuário, além de uma regra padrão (fallback). Se o gov.br não enviar o e-mail, o plugin exibirá uma tela solicitando que o usuário o preencha.
+   
+2. **Via Motor de Regras do GLPI:**
+   Se preferir, você pode criar regras nativas em **Administração > Regras > Regras de atribuição de habilitações a um usuário**. Exemplo: Se o usuário foi autenticado externamente, recebe o perfil *Self-Service* na entidade raiz.
+
 O plugin registra rejeições (acesso sem perfil) no arquivo de log `files/_log/govbrsso*`.
 
 ## Como funciona (resumo técnico)
 
 1. `front/redirect.php` gera `state`, `nonce`, `code_verifier`/`code_challenge` (S256) e redireciona ao `/authorize`.
 2. `front/callback.php` valida o `state`, troca o `code` por tokens no `/token` (Basic auth + `code_verifier`), valida a assinatura via `/jwk`, confere o `nonce`, complementa com `/userinfo` e chama o login.
-3. `src/UserManager.php` casa os claims (`sub`=CPF / e-mail) com um usuário do GLPI e executa `Auth::login()` no caminho EXTERNAL, usando uma variável SSO dedicada criada na instalação (`HTTP_GOVBRSSO_REMOTE_USER`) — isso aciona o motor de regras e cria a sessão local.
+3. `src/UserManager.php` casa os claims (`sub`=CPF / e-mail) com um usuário do GLPI. Valida o nível de confiabilidade (`amr`) e, se ativada a criação automática, aplica as Regras de Domínio (exibindo a tela de coleta de e-mail se necessário). Por fim, executa `Auth::login()` no caminho EXTERNAL, usando uma variável SSO dedicada (`HTTP_GOVBRSSO_REMOTE_USER`) — criando a sessão local e marcando o evento de login como "via Gov.BR (SSO)".
 4. `front/logout.php` encerra a sessão local e faz o logout federado no gov.br.
 
 Os scripts do fluxo (`redirect.php`, `callback.php`, `logout.php`) têm execução anônima garantida via `Firewall::addPluginStrategyForLegacyScripts` no GLPI 11 (declarados no `setup.php`).
