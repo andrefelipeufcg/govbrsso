@@ -26,14 +26,38 @@ final class UserManager
     public static function loginFromClaims(array $claims): array
     {
         $cpf   = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';
-        $email = isset($claims['email']) ? trim((string) $claims['email']) : '';
-        $emailVerified = ($claims['email_verified'] ?? false) === true
-            || ($claims['email_verified'] ?? '') === 'true';
         $name  = trim((string) ($claims['name'] ?? ''));
 
         if ($cpf === '') {
             return ['ok' => false, 'error' => 'Claim "sub" (CPF) ausente no token gov.br.'];
         }
+
+        // --- Extração de múltiplos e-mails ---
+        $verifiedEmails = [];
+        $mainEmailVerified = ($claims['email_verified'] ?? false) === true
+            || ($claims['email_verified'] ?? '') === 'true';
+
+        if (isset($claims['email']) && trim((string)$claims['email']) !== '' && $mainEmailVerified) {
+            $verifiedEmails[] = trim((string)$claims['email']);
+        }
+
+        if (isset($claims['emails']) && is_array($claims['emails'])) {
+            foreach ($claims['emails'] as $em) {
+                $emStr = trim((string)$em);
+                if ($emStr !== '' && !in_array($emStr, $verifiedEmails, true)) {
+                    $verifiedEmails[] = $emStr;
+                }
+            }
+        }
+
+        if (isset($claims['email_institucional']) && trim((string)$claims['email_institucional']) !== '') {
+            $emStr = trim((string)$claims['email_institucional']);
+            if (!in_array($emStr, $verifiedEmails, true)) {
+                $verifiedEmails[] = $emStr;
+            }
+        }
+        
+        $primaryEmail = $verifiedEmails[0] ?? '';
 
         $level = self::getLevel($claims);
         $levelNames = [
@@ -51,13 +75,33 @@ final class UserManager
         }
 
         $loginField = (string) Config::get('login_field', 'cpf');
-        $login = $loginField === 'email'
-            ? ($emailVerified && $email !== '' ? $email : $cpf)
-            : $cpf;
-
+        
         // 1) Garante o usuário no GLPI.
         $user = new User();
-        $found = $user->getFromDBbyName($login);
+        $found = false;
+        $login = $cpf;
+
+        if ($loginField === 'email') {
+            if (empty($verifiedEmails)) {
+                return ['ok' => false, 'error' => 'Seu cadastro no gov.br não possui um e-mail validado. Por favor, acesse gov.br, adicione e valide seu e-mail antes de acessar o sistema.'];
+            }
+            
+            // Varre todos os e-mails fornecidos pelo Gov.br procurando o cadastro no GLPI
+            foreach ($verifiedEmails as $possibleEmail) {
+                if ($user->getFromDBbyName($possibleEmail)) {
+                    $found = true;
+                    $login = $possibleEmail;
+                    break;
+                }
+            }
+            
+            // Se não encontrou nenhuma conta e formos auto-criar, usamos o primeiro e-mail validado
+            if (!$found) {
+                $login = $primaryEmail;
+            }
+        } else {
+            $found = $user->getFromDBbyName($login);
+        }
 
         if (!$found && Config::get('auto_create') === '1') {
             $input = [
@@ -66,14 +110,14 @@ final class UserManager
                 'authtype' => Auth::EXTERNAL,
                 'comment'  => 'Criado via Login Único gov.br',
             ];
-            if ($emailVerified && $email !== '') {
-                $input['_useremails'] = [-1 => $email];
+            if ($primaryEmail !== '') {
+                $input['_useremails'] = [-1 => $primaryEmail];
             }
 
             // --- Lógica de Regras de Domínio ---
             $domain = '';
-            if ($email !== '') {
-                $domain = strtolower(substr(strrchr($email, '@'), 1));
+            if ($primaryEmail !== '') {
+                $domain = strtolower(substr(strrchr($primaryEmail, '@'), 1));
             }
             
             $profile_id = 0;
@@ -111,7 +155,7 @@ final class UserManager
         }
 
         // 2) Login via auth externa (dispara o motor de regras e cria a sessão).
-        return self::performExternalLogin($user, $emailVerified ? $email : '', $levelPt);
+        return self::performExternalLogin($user, $primaryEmail, $levelPt);
     }
 
     /**
