@@ -35,16 +35,19 @@ final class UserManager
             return ['ok' => false, 'error' => 'Claim "sub" (CPF) ausente no token gov.br.'];
         }
 
+        $level = self::getLevel($claims);
+        $levelNames = [
+            'gold'   => 'ouro',
+            'silver' => 'prata',
+            'bronze' => 'bronze'
+        ];
+        $levelPt = $levelNames[$level] ?? 'bronze';
+
         // Verificação opcional de nível mínimo de confiabilidade.
         $minLevel = (string) Config::get('min_level', '');
-        if ($minLevel !== '' && !self::meetsLevel($claims, $minLevel)) {
-            $levelNames = [
-                'gold'   => 'OURO',
-                'silver' => 'PRATA',
-                'bronze' => 'BRONZE'
-            ];
-            $levelPt = $levelNames[$minLevel] ?? strtoupper($minLevel);
-            return ['ok' => false, 'error' => "Sua conta gov.br não atinge o nível mínimo exigido ($levelPt)."];
+        if ($minLevel !== '' && !self::meetsLevel($level, $minLevel)) {
+            $minLevelPt = strtoupper($levelNames[$minLevel] ?? $minLevel);
+            return ['ok' => false, 'error' => "Sua conta gov.br não atinge o nível mínimo exigido ($minLevelPt)."];
         }
 
         $loginField = (string) Config::get('login_field', 'cpf');
@@ -108,13 +111,13 @@ final class UserManager
         }
 
         // 2) Login via auth externa (dispara o motor de regras e cria a sessão).
-        return self::performExternalLogin($user, $emailVerified ? $email : '');
+        return self::performExternalLogin($user, $emailVerified ? $email : '', $levelPt);
     }
 
     /**
      * @return array{ok:bool,error:string}
      */
-    private static function performExternalLogin(User $user, string $email): array
+    private static function performExternalLogin(User $user, string $email, string $levelPt): array
     {
         /** @var \DBmysql $DB */
         global $CFG_GLPI, $DB;
@@ -168,10 +171,10 @@ final class UserManager
                     if (count($iterator) > 0) {
                         $event = $iterator->current();
                         $message = $event['message'];
-                        if (strpos($message, 'via Gov.BR (SSO)') === false) {
+                        if (strpos($message, 'via Gov.BR') === false) {
                             $DB->update('glpi_events', [
                                 'items_id' => $users_id,
-                                'message'  => ltrim($message) . ' via Gov.BR (SSO)'
+                                'message'  => ltrim($message) . " via Gov.BR nível {$levelPt} (SSO)"
                             ], ['id' => $event['id']]);
                         }
                     }
@@ -201,9 +204,8 @@ final class UserManager
         return ['ok' => true, 'error' => ''];
     }
 
-    private static function meetsLevel(array $claims, string $min): bool
+    private static function getLevel(array $claims): string
     {
-        $order = ['bronze' => 1, 'silver' => 2, 'gold' => 3];
         $level = '';
 
         // Tenta obter o nível pelo array AMR (padrão atual do gov.br)
@@ -229,6 +231,13 @@ final class UserManager
         if ($level === '') {
             $level = 'bronze';
         }
+
+        return $level;
+    }
+
+    private static function meetsLevel(string $level, string $min): bool
+    {
+        $order = ['bronze' => 1, 'silver' => 2, 'gold' => 3];
 
         if (!isset($order[$level], $order[$min])) {
             return false;
