@@ -248,7 +248,7 @@ final class UserManager
         return ['ok' => true, 'error' => ''];
     }
 
-    private static function getLevel(array $claims): string
+    public static function getLevel(array $claims): string
     {
         $level = '';
 
