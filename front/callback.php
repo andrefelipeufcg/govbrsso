@@ -104,8 +104,18 @@ unset($_SESSION['govbrsso_nonce']);
 $userinfo = Client::userinfo($accessToken);
 $claims   = array_merge($claims, array_filter($userinfo, static fn ($v) => $v !== null && $v !== ''));
 
-    // Efetua o login no GLPI.
-    $result = UserManager::loginFromClaims($claims);
+// --- Log estruturado de diagnóstico (todas as claims recebidas) ---
+$cpfLog = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : 'N/A';
+$claimsSafe = $claims;
+unset($claimsSafe['picture']); // Remove foto (base64 gigante) do log
+Toolbox::logInFile(
+    'govbrsso',
+    "[CLAIMS] CPF=$cpfLog | " . json_encode($claimsSafe, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n",
+    true
+);
+
+// Efetua o login no GLPI.
+$result = UserManager::loginFromClaims($claims);
 
 if (!$result['ok']) {
     $cpf   = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';

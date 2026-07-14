@@ -103,6 +103,10 @@ echo <<<HTML
                 </li>
                 <li>Marque a opção <strong>Ativar o botão "Entrar com gov.br"</strong> no final do formulário e clique em Salvar.</li>
             </ol>
+            <p style="margin-bottom: 0; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #b8d8ea;">
+                <strong>💡 Diagnóstico:</strong> Para ver os dados (claims) recebidos do gov.br durante o login de um usuário, 
+                <a href="{$CFG_GLPI['root_doc']}/plugins/govbrsso/front/debug_claims.php" style="color: #178abb; font-weight: 600;">clique aqui</a>.
+            </p>
         </div>
 
         <form method="post" action="{$formAction}">
