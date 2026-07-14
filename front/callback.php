@@ -15,6 +15,9 @@ use User;
 
 include(__DIR__ . '/../../../inc/includes.php');
 
+global $CFG_GLPI;
+
+
 function displayFriendlyError($msg) {
     global $CFG_GLPI;
     Html::nullHeader('Erro de Autenticação', $CFG_GLPI['root_doc'] . '/index.php');
@@ -121,7 +124,8 @@ if (!$found && Config::get('auto_create') === '1' && $email === '') {
 $result = UserManager::loginFromClaims($claims);
 
 if (!$result['ok']) {
-    Toolbox::logInFile('govbrsso', 'Login negado: ' . $result['error'] . "\n", true);
+    $emailLog = $email !== '' ? $email : 'não informado';
+    Toolbox::logInFile('govbrsso', 'Login negado (CPF: ' . $cpf . ' / E-mail: ' . $emailLog . '): ' . $result['error'] . "\n", true);
     displayFriendlyError(htmlspecialchars($result['error']));
 }
 

@@ -18,7 +18,8 @@ if (isset($_POST['save_config'])) {
     // automaticamente para plugins com csrf_compliant=true. Se o token fosse
     // inválido, o core já teria abortado antes de chegar aqui.
     // Portanto, se este código está executando, o CSRF foi validado com sucesso.
-    Toolbox::logInFile('govbrsso', "DEBUG config.form POST recebido:\n" . print_r($_POST, true) . "\n", true);
+    $adminName = $_SESSION['glpiname'] ?? 'Desconhecido';
+    Toolbox::logInFile('govbrsso', "[ADMIN] Configurações do plugin govbrsso alteradas pelo usuário {$adminName} com os seguintes dados:\n" . print_r($_POST, true) . "\n", true);
 
     Config::save($_POST);
     Session::addMessageAfterRedirect('Configuração do gov.br salva com sucesso.', true, INFO);
