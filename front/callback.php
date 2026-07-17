@@ -38,7 +38,7 @@ if (!Config::isActive()) {
 // Erro retornado pelo provedor.
 if (isset($_GET['error'])) {
     $desc = (string) ($_GET['error_description'] ?? $_GET['error']);
-    Toolbox::logInFile('govbrsso', 'Erro do provedor: ' . $desc . "\n", true);
+    Toolbox::logInFile('govbrsso', 'Erro do provedor: ' . $desc . "\n");
     displayFriendlyError('Falha na autenticação gov.br: ' . htmlspecialchars($desc));
 }
 
@@ -85,7 +85,7 @@ $idToken     = (string) ($token['id_token'] ?? '');
 $claims = [];
 if ($idToken !== '') {
     if (!Client::verifySignature($idToken)) {
-        Toolbox::logInFile('govbrsso', "Assinatura do id_token não validada (JWKS).\n", true);
+        Toolbox::logInFile('govbrsso', "Assinatura do id_token não validada (JWKS).\n");
         // gov.br entrega via TLS direto do /token; seguimos com cautela e
         // complementamos via /userinfo. Para rigor máximo, troque por die().
     }
@@ -110,8 +110,7 @@ $claimsSafe = $claims;
 unset($claimsSafe['picture']); // Remove foto (base64 gigante) do log
 Toolbox::logInFile(
     'govbrsso',
-    "[CLAIMS] CPF=$cpfLog | " . json_encode($claimsSafe, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n",
-    true
+    "[CLAIMS] CPF=$cpfLog | " . json_encode($claimsSafe, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n"
 );
 
 // Efetua o login no GLPI.
@@ -121,7 +120,7 @@ if (!$result['ok']) {
     $cpf   = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';
     $email = isset($claims['email']) ? trim((string) $claims['email']) : '';
     $emailLog = $email !== '' ? $email : 'não informado';
-    Toolbox::logInFile('govbrsso', 'Login negado (CPF: ' . $cpf . ' / E-mail: ' . $emailLog . '): ' . $result['error'] . "\n", true);
+    Toolbox::logInFile('govbrsso', 'Login negado (CPF: ' . $cpf . ' / E-mail: ' . $emailLog . '): ' . $result['error'] . "\n");
     displayFriendlyError(htmlspecialchars($result['error']));
 }
 
