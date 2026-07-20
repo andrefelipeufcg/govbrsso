@@ -24,6 +24,15 @@ if (isset($_POST['save_config'])) {
     $adminName = $_SESSION['glpiname'] ?? 'Desconhecido';
     Toolbox::logInFile('govbrsso', "[ADMIN] Configurações do plugin govbrsso alteradas pelo usuário {$adminName} com os seguintes dados:\n" . print_r($_POST, true) . "\n");
 
+    if (isset($_POST['auto_create']) && $_POST['auto_create'] === '1') {
+        $defProf = (int)($_POST['default_profile_id'] ?? 0);
+        // default_entity_id is optional to be 0 (Root entity is usually 0), but profile_id > 0 is mandatory.
+        if ($defProf <= 0) {
+            Session::addMessageAfterRedirect(__('Erro: Quando a Criação Automática está ativada, você deve escolher um Perfil Padrão (Fallback) válido.', 'govbrsso'), false, ERROR);
+            Html::redirect($_SERVER['REQUEST_URI']);
+        }
+    }
+
     Config::save($_POST);
     Session::addMessageAfterRedirect('Configuração do gov.br salva com sucesso.', true, INFO);
     Html::redirect($_SERVER['REQUEST_URI']);
