@@ -202,15 +202,19 @@ final class Config
         }
         $url = Html::cleanInputText(self::startUrl());
 
+        $textOr = __('OU', 'govbrsso');
+        $textAria = __('Entrar com gov.br', 'govbrsso');
+        $textLogin = __('Entrar com', 'govbrsso');
+
         return <<<HTML
 <div class="mt-3 text-center" id="govbrsso-login-wrapper">
   <div class="d-flex align-items-center my-2">
       <hr class="flex-grow-1 m-0">
-      <span class="mx-3 text-secondary text-uppercase small">OU</span>
+      <span class="mx-3 text-secondary text-uppercase small">{$textOr}</span>
       <hr class="flex-grow-1 m-0">
   </div>
-  <a href="{$url}" class="btn btn-outline-secondary w-100 mt-2 d-flex align-items-center justify-content-center" style="gap: 8px;" role="button" aria-label="Entrar com gov.br">
-    <span class="govbrsso-signin__text">Entrar com</span>
+  <a href="{$url}" class="btn btn-outline-secondary w-100 mt-2 d-flex align-items-center justify-content-center" style="gap: 8px;" role="button" aria-label="{$textAria}">
+    <span class="govbrsso-signin__text">{$textLogin}</span>
     <span class="govbrsso-signin__brand">
       <span style="color:#1351b4">g</span><span style="color:#fcc400">o</span><span style="color:#00a859">v</span><span style="color:#1351b4">.b</span><span style="color:#fcc400">r</span>
     </span>

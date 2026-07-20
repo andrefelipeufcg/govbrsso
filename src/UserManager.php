@@ -29,7 +29,7 @@ final class UserManager
         $name  = trim((string) ($claims['name'] ?? ''));
 
         if ($cpf === '') {
-            return ['ok' => false, 'error' => 'Claim "sub" (CPF) ausente no token gov.br.'];
+            return ['ok' => false, 'error' => __('Claim "sub" (CPF) ausente no token gov.br.', 'govbrsso')];
         }
 
         // --- Extração de múltiplos e-mails ---
@@ -60,18 +60,13 @@ final class UserManager
         $primaryEmail = $verifiedEmails[0] ?? '';
 
         $level = self::getLevel($claims);
-        $levelNames = [
-            'gold'   => 'ouro',
-            'silver' => 'prata',
-            'bronze' => 'bronze'
-        ];
-        $levelPt = $levelNames[$level] ?? 'bronze';
+        $levelMap = ['gold' => __('ouro', 'govbrsso'), 'silver' => __('prata', 'govbrsso'), 'bronze' => __('bronze', 'govbrsso')];
+        $levelPt = $levelMap[$level] ?? __('bronze', 'govbrsso');
 
         // Verificação opcional de nível mínimo de confiabilidade.
         $minLevel = (string) Config::get('min_level', '');
         if ($minLevel !== '' && !self::meetsLevel($level, $minLevel)) {
-            $minLevelPt = strtoupper($levelNames[$minLevel] ?? $minLevel);
-            return ['ok' => false, 'error' => "Sua conta gov.br não atinge o nível mínimo exigido ($minLevelPt)."];
+            return ['ok' => false, 'error' => sprintf(__('Sua conta gov.br não atinge o nível mínimo exigido (%s).', 'govbrsso'), mb_strtoupper((string)($levelMap[$minLevel] ?? $minLevel), 'UTF-8'))];
         }
 
         $loginField = (string) Config::get('login_field', 'cpf');
@@ -83,7 +78,7 @@ final class UserManager
 
         if ($loginField === 'email') {
             if (empty($verifiedEmails)) {
-                return ['ok' => false, 'error' => 'Seu cadastro no gov.br não possui um e-mail validado. Por favor, acesse gov.br, adicione e valide seu e-mail antes de acessar o sistema.'];
+                return ['ok' => false, 'error' => __('Seu cadastro no gov.br não possui um e-mail validado. Por favor, acesse gov.br, adicione e valide seu e-mail antes de acessar o sistema.', 'govbrsso')];
             }
             
             // Varre todos os e-mails fornecidos pelo Gov.br procurando o cadastro no GLPI
@@ -108,7 +103,7 @@ final class UserManager
                 'name'     => $login,
                 'realname' => $name !== '' ? $name : null,
                 'authtype' => Auth::EXTERNAL,
-                'comment'  => 'Criado via Login Único gov.br',
+                'comment'  => __('Criado via Login Único gov.br', 'govbrsso'),
             ];
             if ($primaryEmail !== '') {
                 $input['_useremails'] = [-1 => $primaryEmail];
@@ -147,11 +142,11 @@ final class UserManager
 
             $id = $user->add($input);
             if (!$id) {
-                return ['ok' => false, 'error' => 'Falha ao criar o usuário no GLPI.'];
+                return ['ok' => false, 'error' => __('Falha ao criar o usuário no GLPI.', 'govbrsso')];
             }
             $user->getFromDB($id);
         } elseif (!$found) {
-            return ['ok' => false, 'error' => "Usuário '$login' não existe e a criação automática está desativada."];
+            return ['ok' => false, 'error' => sprintf(__("Usuário '%s' não existe e a criação automática está desativada.", 'govbrsso'), $login)];
         }
 
         // 2) Login via auth externa (dispara o motor de regras e cria a sessão).
@@ -180,7 +175,7 @@ final class UserManager
             break;
         }
         if ($ssoId === null) {
-            return ['ok' => false, 'error' => 'Variável SSO do plugin não encontrada (reinstale o plugin).'];
+            return ['ok' => false, 'error' => __('Variável SSO do plugin não encontrada (reinstale o plugin).', 'govbrsso')];
         }
 
         // Contexto temporário de auth externa.
@@ -240,8 +235,8 @@ final class UserManager
             ) > 0;
 
             $msg = $hasProfile
-                ? "Usuário '$login' não autorizado a conectar no GLPI."
-                : "Usuário '$login' sem habilitação. Crie uma Regra de atribuição de habilitações (Administração > Regras).";
+                ? sprintf(__("Usuário '%s' não autorizado a conectar no GLPI.", 'govbrsso'), $login)
+                : sprintf(__("Usuário '%s' sem habilitação. Crie uma Regra de atribuição de habilitações (Administração > Regras).", 'govbrsso'), $login);
             return ['ok' => false, 'error' => $msg];
         }
 

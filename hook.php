@@ -33,7 +33,7 @@ function plugin_govbrsso_install(): bool
     if (count($exists) === 0) {
         $DB->insert('glpi_ssovariables', [
             'name'    => $name,
-            'comment' => 'Variável usada pelo plugin Login Único gov.br (não remover).',
+            'comment' => __('Variável usada pelo plugin Login Único gov.br (não remover).', 'govbrsso'),
         ]);
     }
 

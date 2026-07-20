@@ -1,0 +1,190 @@
+<div class="card col-12 col-lg-8 mx-auto my-4">
+    <div class="card-header">
+        <h3 class="card-title">{{ __('Login Único gov.br', 'govbrsso') }}</h3>
+    </div>
+    
+    <div class="card-body">
+        <div style="background: #eef9fd; border-left: 4px solid #178abb; padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+            <h3 style="margin-top: 0; font-size: 1.2rem; color: #178abb;">{{ __('Como habilitar a integração com o gov.br?', 'govbrsso') }}</h3>
+            <ol style="line-height: 1.6; margin-bottom: 0; padding-left: 1.2rem;">
+                <li>{{ __('Acesse o', 'govbrsso') }} <a href="https://manual-roteiro-integracao-login-unico.servicos.gov.br/pt/latest/" target="_blank">{{ __('Roteiro de Integração do gov.br', 'govbrsso') }}</a> {{ __('e inicie o processo de solicitação de uso para o seu órgão/entidade.', 'govbrsso') }}</li>
+                <li>{{ __('Durante o cadastro do sistema, você precisará informar as URLs de redirecionamento. Copie e cole exatamente as URLs abaixo:', 'govbrsso') }}
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem; list-style-type: disc;">
+                        <li><strong>{{ __('URL de retorno (redirect_uri):', 'govbrsso') }}</strong> <code>{{ callbackUrl }}</code></li>
+                        <li><strong>{{ __('URL de Log Out:', 'govbrsso') }}</strong> <code>{{ logoutUrl }}</code></li>
+                    </ul>
+                </li>
+                <li>{{ __('Após a aprovação da integração pelo Ministério da Gestão e da Inovação (MGI), você receberá as credenciais:', 'govbrsso') }} <strong>client_id</strong> {{ __('e', 'govbrsso') }} <strong>client_secret</strong>.</li>
+                <li>{{ __('Preencha os campos do formulário abaixo com suas credenciais.', 'govbrsso') }}</li>
+                <li>{{ __('Configure a', 'govbrsso') }} <strong>{{ __('Provider URL (sso)', 'govbrsso') }}</strong> {{ __('conforme o ambiente:', 'govbrsso') }}
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem; list-style-type: disc;">
+                        <li>{{ __('Homologação:', 'govbrsso') }} <code>https://sso.staging.acesso.gov.br</code></li>
+                        <li>{{ __('Produção:', 'govbrsso') }} <code>https://sso.acesso.gov.br</code></li>
+                    </ul>
+                </li>
+                <li>{{ __('Marque a opção', 'govbrsso') }} <strong>{{ __('Ativar o botão "Entrar com gov.br"', 'govbrsso') }}</strong> {{ __('no final do formulário e clique em Salvar.', 'govbrsso') }}</li>
+            </ol>
+            <p style="margin-bottom: 0; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #b8d8ea;">
+                <strong>💡 {{ __('Diagnóstico:', 'govbrsso') }}</strong> {{ __('Para ver os dados (claims) recebidos do gov.br durante o login de um usuário,', 'govbrsso') }}
+                <a href="{{ root_doc }}/plugins/govbrsso/front/claims.php" style="color: #178abb; font-weight: 600;">{{ __('clique aqui', 'govbrsso') }}</a>.
+            </p>
+        </div>
+
+        <form method="post" action="{{ formAction }}">
+            <input type="hidden" name="_glpi_csrf_token" value="{{ csrf }}">
+
+            <div class="mb-3">
+                <label class="form-label">{{ __('Provider URL (sso)', 'govbrsso') }}</label>
+                <input type="text" name="provider_url" class="form-control" value="{{ c['provider_url'] }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">client_id</label>
+                <input type="text" name="client_id" class="form-control" value="{{ c['client_id'] }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">client_secret <small class="text-muted">({{ __('deixe em branco para manter o atual', 'govbrsso') }})</small></label>
+                <input type="password" name="client_secret" class="form-control" value="">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">{{ __('Escopos', 'govbrsso') }}</label>
+                <input type="text" name="scopes" class="form-control" value="{{ c['scopes'] }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">{{ __('Campo de login do GLPI', 'govbrsso') }}</label>
+                <select name="login_field" class="form-select">
+                    <option value="cpf" {% if c['login_field'] == 'cpf' %}selected{% endif %}>{{ __('CPF (sub)', 'govbrsso') }}</option>
+                    <option value="email" {% if c['login_field'] == 'email' %}selected{% endif %}>{{ __('E-mail', 'govbrsso') }}</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">{{ __('Nível mínimo de confiabilidade', 'govbrsso') }}</label>
+                <select name="min_level" class="form-select">
+                    <option value="" {% if c['min_level'] == '' %}selected{% endif %}>{{ __('Qualquer', 'govbrsso') }}</option>
+                    <option value="bronze" {% if c['min_level'] == 'bronze' %}selected{% endif %}>{{ __('Bronze', 'govbrsso') }}</option>
+                    <option value="silver" {% if c['min_level'] == 'silver' %}selected{% endif %}>{{ __('Prata', 'govbrsso') }}</option>
+                    <option value="gold" {% if c['min_level'] == 'gold' %}selected{% endif %}>{{ __('Ouro', 'govbrsso') }}</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-check form-switch">
+                    <input type="hidden" name="auto_create" value="0">
+                    <input class="form-check-input" type="checkbox" name="auto_create" id="auto_create_chk" value="1" {% if c['auto_create'] == '1' %}checked{% endif %}>
+                    <span class="form-check-label">{{ __('Criar usuário automaticamente no primeiro login', 'govbrsso') }}</span>
+                </label>
+            </div>
+
+            <div id="domain_rules_section">
+                <hr class="my-4">
+                <h4>{{ __('Regras de Perfil e Entidade por Domínio', 'govbrsso') }}</h4>
+                <div class="alert alert-secondary">
+                    {{ __('Adicione regras para definir qual perfil e entidade o usuário receberá com base em seu domínio de e-mail (Opcional).', 'govbrsso') }}
+                </div>
+                
+                <table class="table table-sm table-bordered" id="domain-rules-table" style="table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th style="width: 33%;">{{ __('Domínio (depois do @)', 'govbrsso') }}</th>
+                            <th style="width: 33%;">{{ __('Perfil', 'govbrsso') }}</th>
+                            <th style="width: 33%;">{{ __('Entidade', 'govbrsso') }}</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ domainRulesHtml|raw }}
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-sm btn-outline-secondary mb-3" id="btn-add-rule">
+                    <i class="fas fa-plus"></i>&nbsp;&nbsp;{{ __('Adicionar Regra', 'govbrsso') }}
+                </button>
+
+                <table style="display:none;">
+                    <tbody id="rule-template">
+                    <tr>
+                        <td><input type="text" name="domain_rule_domain[]" class="form-control" placeholder="ex: aluno.edu.br" required disabled></td>
+                        <td><select name="domain_rule_profile_id[]" class="form-select" required disabled>{{ profilesOptions|raw }}</select></td>
+                        <td><select name="domain_rule_entity_id[]" class="form-select" required disabled>{{ entitiesOptions|raw }}</select></td>
+                        <td style="text-align:center; vertical-align:middle;"><button type="button" class="btn btn-outline-danger btn-sm btn-remove-rule" title="{{ __('Remover', 'govbrsso') }}"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <hr class="my-4">
+
+                <h4>{{ __('Regra Padrão (Fallback)', 'govbrsso') }}</h4>
+                <div class="alert alert-secondary">
+                    {{ __('Se o e-mail do usuário não corresponder a nenhuma das regras acima, este perfil e entidade serão usados. Obrigatório se a criação automática estiver ativada.', 'govbrsso') }}
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">{{ __('Perfil Padrão (ELSE):', 'govbrsso') }}</label>
+                        <select name="default_profile_id" class="form-select searchable-select">{{ defProfOpts|raw }}</select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ __('Entidade Padrão (ELSE):', 'govbrsso') }}</label>
+                        <select name="default_entity_id" class="form-select searchable-select">{{ defEntOpts|raw }}</select>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="mb-3">
+                <label class="form-check form-switch">
+                    <input type="hidden" name="is_active" value="0">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="is_active_chk" value="1" {% if c['is_active'] == '1' %}checked{% endif %}>
+                    <span class="form-check-label">{{ __('Ativar o botão "Entrar com gov.br"', 'govbrsso') }}</span>
+                </label>
+            </div>
+
+            <div class="text-end">
+                <button type="submit" name="save_config" class="btn btn-primary">
+                    <i class="fas fa-save"></i>&nbsp;&nbsp;{{ __('Salvar', 'govbrsso') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(function() {
+    function toggleDomainRules() {
+        if ($('#auto_create_chk').is(':checked')) {
+            $('#domain_rules_section').show();
+        } else {
+            $('#domain_rules_section').hide();
+        }
+    }
+    
+    $('#auto_create_chk').on('change', toggleDomainRules);
+    toggleDomainRules();
+    function initSearchable(ctx) {
+        var sels = ctx.find('.searchable-select');
+        if (typeof $.fn.select2 === 'function') {
+            sels.select2({width: '100%'});
+        } else if (typeof TomSelect !== 'undefined') {
+            sels.each(function() {
+                if (!this.tomselect) new TomSelect(this);
+            });
+        }
+    }
+    initSearchable($(document));
+
+    $('#btn-add-rule').on('click', function() {
+        var newRow = $('#rule-template tr').clone();
+        newRow.find(':input').prop('disabled', false);
+        $('#domain-rules-table tbody').first().append(newRow);
+        initSearchable(newRow);
+    });
+
+    $('#domain-rules-table').on('click', '.btn-remove-rule', function() {
+        $(this).closest('tr').remove();
+    });
+});
+</script>

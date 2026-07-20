@@ -18,28 +18,39 @@ include(__DIR__ . '/../../../inc/includes.php');
 global $CFG_GLPI;
 
 
-function displayFriendlyError($msg) {
+function displayFriendlyError($msg, $debug = null) {
     global $CFG_GLPI;
-    Html::nullHeader('Erro de Autenticação', $CFG_GLPI['root_doc'] . '/index.php');
-    echo "<div style='display: flex; justify-content: center; align-items: center; min-height: 50vh;'>";
-    echo "<div style='background: #fff3f3; border-left: 5px solid #d9534f; padding: 30px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; font-family: sans-serif;'>";
-    echo "<h2 style='color: #d9534f; margin-top: 0; font-size: 20px;'>Erro de Autenticação</h2>";
+    $title = __('Erro de Autenticação', 'govbrsso');
+    $backText = __('Voltar para o Login', 'govbrsso');
+    
+    Html::nullHeader($title, $CFG_GLPI['root_doc'] . '/index.php');
+    
+    echo "<div style='display: flex; justify-content: center; align-items: center; min-height: 50vh; padding: 20px;'>";
+    echo "<div style='background: #fff3f3; border-left: 5px solid #d9534f; padding: 30px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; font-family: sans-serif; width: 100%; text-align: left;'>";
+    echo "<h2 style='color: #d9534f; margin-top: 0; font-size: 20px; font-weight: bold;'>" . $title . "</h2>";
     echo "<p style='font-size: 16px; color: #444; margin-bottom: 25px; line-height: 1.5;'>" . htmlspecialchars($msg) . "</p>";
-    echo "<a href='" . $CFG_GLPI['root_doc'] . "/index.php' style='display: inline-block; padding: 10px 20px; background: #0056b3; color: white; text-decoration: none; border-radius: 4px; font-weight: 500;'>Voltar para o Login</a>";
+    
+    if ($debug !== null) {
+        echo "<pre style='text-align:left; background:#f8f9fa; padding:15px; border:1px solid #ddd; font-size: 13px; color: #333; overflow-x: auto; margin-bottom: 25px;'>" . htmlspecialchars(print_r($debug, true), ENT_QUOTES, 'UTF-8') . "</pre>";
+    }
+    
+    echo "<a href='" . $CFG_GLPI['root_doc'] . "/index.php' style='display: inline-block; padding: 10px 20px; background: #0056b3; color: white; text-decoration: none; border-radius: 4px; font-weight: 500; text-align: center;'>" . $backText . "</a>";
+    
     echo "</div></div>";
+    
     Html::nullFooter();
     die();
 }
 
 if (!Config::isActive()) {
-    displayFriendlyError('Login Único gov.br não está configurado/ativo.');
+    displayFriendlyError(__('Login Único gov.br não está configurado/ativo.', 'govbrsso'));
 }
 
 // Erro retornado pelo provedor.
 if (isset($_GET['error'])) {
     $desc = (string) ($_GET['error_description'] ?? $_GET['error']);
     Toolbox::logInFile('govbrsso', 'Erro do provedor: ' . $desc . "\n");
-    displayFriendlyError('Falha na autenticação gov.br: ' . htmlspecialchars($desc));
+    displayFriendlyError(__('Falha na autenticação gov.br: ', 'govbrsso') . $_GET['error'] . ' - ' . ($_GET['error_description'] ?? ''));
 }
 
 $code  = (string) ($_GET['code'] ?? '');
@@ -48,7 +59,7 @@ $state = (string) ($_GET['state'] ?? '');
 // Validação do state (anti-CSRF): tem que bater com o emitido na sessão.
 $expectedState = (string) ($_SESSION['govbrsso_state'] ?? '');
 if ($code === '' || $state === '' || !hash_equals($expectedState, $state)) {
-    displayFriendlyError('Requisição de callback inválida (state/code).');
+    displayFriendlyError(__('Requisição de callback inválida (state/code).', 'govbrsso'));
 }
 
 $verifier = (string) ($_SESSION['govbrsso_code_verifier'] ?? '');
@@ -71,11 +82,7 @@ if (isset($token['error']) || empty($token['access_token'])) {
         'code_challenge_sent_in_auth' => Client::codeChallenge($verifier),
         'token_response' => $token,
     ];
-    echo "<h2>Erro ao obter Token do Gov.br</h2>";
-    echo "<pre style='background:#f4f4f4; padding:10px; border:1px solid #ccc;'>";
-    print_r($debug);
-    echo "</pre>";
-    die();
+    displayFriendlyError(__('Erro ao obter token do gov.br', 'govbrsso'), $debug);
 }
 
 $accessToken = (string) $token['access_token'];
@@ -95,7 +102,7 @@ if ($idToken !== '') {
     $expectedNonce = (string) ($_SESSION['govbrsso_nonce'] ?? '');
     if ($expectedNonce !== '' && ($claims['nonce'] ?? '') !== $expectedNonce) {
         unset($_SESSION['govbrsso_nonce']);
-        displayFriendlyError('Nonce inválido no id_token.');
+        displayFriendlyError(__('Nonce inválido no id_token.', 'govbrsso'), ['esperado' => $expectedNonce, 'recebido' => $claims['nonce'] ?? null]);
     }
 }
 unset($_SESSION['govbrsso_nonce']);

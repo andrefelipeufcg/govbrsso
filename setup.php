@@ -4,14 +4,14 @@
  * Plugin "govbrsso" — Login Único gov.br (OIDC/PKCE) para GLPI 11.
  *
  * @license GPLv3+
- * @link    https://acesso.gov.br/roteiro-tecnico/
+ * @link    https://github.com/andrefelipeufcg/govbrsso/
  */
 
 use Glpi\Http\Firewall;
 use Glpi\Plugin\Hooks;
 use GlpiPlugin\Govbrsso\Config;
 
-define('PLUGIN_GOVBRSSO_VERSION', '1.0.0');
+define('PLUGIN_GOVBRSSO_VERSION', '1.0.1');
 
 // Versão mínima (inclusiva) e máxima (exclusiva) do GLPI suportada.
 define('PLUGIN_GOVBRSSO_MIN_GLPI', '11.0.0');
@@ -73,7 +73,7 @@ function plugin_init_govbrsso(): void
 function plugin_version_govbrsso(): array
 {
     return [
-        'name'         => 'Login Único gov.br',
+        'name'         => __('Login Único gov.br', 'govbrsso'),
         'version'      => PLUGIN_GOVBRSSO_VERSION,
         'author'       => 'Daniel Ramos, Andre Felipe',
         'license'      => 'GPLv3+',
@@ -101,7 +101,7 @@ function plugin_version_govbrsso(): array
 function plugin_govbrsso_check_prerequisites(): bool
 {
     if (version_compare(GLPI_VERSION, PLUGIN_GOVBRSSO_MIN_GLPI, '<')) {
-        echo 'Este plugin requer GLPI >= ' . PLUGIN_GOVBRSSO_MIN_GLPI;
+        echo __('Este plugin requer GLPI >= ', 'govbrsso') . PLUGIN_GOVBRSSO_MIN_GLPI;
         return false;
     }
     return true;
