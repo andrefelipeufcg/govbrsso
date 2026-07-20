@@ -106,7 +106,7 @@ if ($filterCpf !== '') {
     }
 }
 
-$selfUrl = $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/debug_claims.php';
+$selfUrl = $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/claims.php';
 $filterCpfSafe = htmlspecialchars($filterCpf);
 
 $params = [
@@ -192,6 +192,6 @@ if (!empty($entries)) {
     $params['entries'] = $entries;
 }
 
-TemplateRenderer::getInstance()->display('@govbrsso/debug_claims.html.twig', $params);
+TemplateRenderer::getInstance()->display('@govbrsso/claims.html.twig', $params);
 
 Html::footer();
