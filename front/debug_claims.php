@@ -11,6 +11,7 @@
  * @license GPLv3+
  */
 
+use Glpi\Application\View\TemplateRenderer;
 use GlpiPlugin\Govbrsso\Config;
 
 include(__DIR__ . '/../../../inc/includes.php');
@@ -85,84 +86,18 @@ if ($filterCpf !== '' && file_exists($logFile) && is_readable($logFile)) {
 $selfUrl = $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/debug_claims.php';
 $filterCpfSafe = htmlspecialchars($filterCpf);
 
-echo <<<HTML
-<div style="max-width: 1100px; margin: 20px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+$params = [
+    'selfUrl'       => $selfUrl,
+    'filterCpf'     => $filterCpf,
+    'filterCpfSafe' => $filterCpfSafe,
+    'entries'       => [],
+    'total'         => count($entries),
+];
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; color: #1351b4;">
-            <span style="font-size: 24px;">🔍</span> Diagnóstico de Claims Gov.br
-        </h2>
-        <span style="background: #fff3cd; color: #856404; padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: 500;">
-            ⚠️ Acesso restrito a Super-Admins
-        </span>
-    </div>
-
-    <div style="background: #e8f0fe; border: 1px solid #b3d4fc; border-radius: 6px; padding: 16px; margin-bottom: 20px; font-size: 14px; color: #1a3e72; line-height: 1.6;">
-        <strong>Como funciona:</strong> Cada vez que um usuário faz login via Gov.br, todas as informações (claims) 
-        recebidas do provedor são gravadas no log. Digite o CPF abaixo para buscar os registros de login 
-        e investigar problemas de criação duplicada de contas ou divergência de e-mails.
-    </div>
-
-    <form method="get" action="{$selfUrl}" style="display: flex; gap: 10px; margin-bottom: 25px; align-items: center;">
-        <label for="cpf" style="font-weight: 600; color: #333; white-space: nowrap;">Buscar por CPF:</label>
-        <input type="text" id="cpf" name="cpf" value="{$filterCpfSafe}" placeholder="000.000.000-00" 
-               maxlength="14" inputmode="numeric"
-               style="flex: 1; max-width: 300px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: monospace;">
-        <button type="submit" style="padding: 8px 20px; background: #1351b4; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
-            Buscar
-        </button>
-    </form>
-
-    <script>
-    (function() {
-        var cpfInput = document.getElementById('cpf');
-
-        function maskCpf(v) {
-            v = v.replace(/\D/g, '').substring(0, 11);
-            if (v.length > 9) {
-                v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-            } else if (v.length > 6) {
-                v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-            } else if (v.length > 3) {
-                v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
-            }
-            return v;
-        }
-
-        // Formata o valor inicial (caso venha da URL)
-        cpfInput.value = maskCpf(cpfInput.value);
-
-        cpfInput.addEventListener('input', function() {
-            var pos = this.selectionStart;
-            var oldLen = this.value.length;
-            this.value = maskCpf(this.value);
-            var newLen = this.value.length;
-            pos += (newLen - oldLen);
-            this.setSelectionRange(pos, pos);
-        });
-
-        cpfInput.addEventListener('keypress', function(e) {
-            if (!/\d/.test(e.key) && e.key !== 'Enter') {
-                e.preventDefault();
-            }
-        });
-    })();
-    </script>
-HTML;
-
-
-if ($filterCpf === '') {
-    echo '<div style="text-align: center; padding: 60px 20px; color: #999;"><span style="font-size: 48px; display: block; margin-bottom: 15px;">🔎</span><p style="font-size: 15px; margin: 0;">Digite um CPF acima para consultar os dados recebidos do Gov.br.</p></div>';
-} elseif (empty($entries)) {
-    echo "<div style='text-align: center; padding: 40px; color: #888;'>Nenhum registro encontrado para o CPF <strong>{$filterCpfSafe}</strong>.</div>";
-} else {
-    $total = count($entries);
-    echo "<p style='color: #666; font-size: 13px; margin-bottom: 15px;'><strong>{$total}</strong> registro(s) encontrado(s) (mais recentes primeiro):</p>";
-
-    foreach ($entries as $i => $entry) {
+if (!empty($entries)) {
+    foreach ($entries as $i => &$entry) {
         $tsFallback = htmlspecialchars($entry['timestamp']);
         $cpf = htmlspecialchars($entry['cpf']);
-
         $nome = htmlspecialchars($entry['claims']['name'] ?? 'Sem Nome');
 
         // Pega o auth_time das claims para a data (unix timestamp)
@@ -182,11 +117,12 @@ if ($filterCpf === '') {
         ];
         $lvlColor = $levelColors[$levelCode] ?? '#cd7f32';
 
-        $levelNames = ['gold' => 'ouro', 'silver' => 'prata', 'bronze' => 'bronze'];
-        $levelPt = $levelNames[$levelCode] ?? 'bronze';
+        $levelNames = ['gold' => __('ouro', 'govbrsso'), 'silver' => __('prata', 'govbrsso'), 'bronze' => __('bronze', 'govbrsso')];
+        $levelPt = $levelNames[$levelCode] ?? __('bronze', 'govbrsso');
 
         // Monta a tabela de claims
-        $claimsRows = "<tr><td style='padding: 6px 12px; border-bottom: 1px solid #eee; font-weight: 700; color: {$lvlColor}; background: #ffffff; white-space: nowrap; vertical-align: top;'>conta</td><td style='padding: 6px 12px; border-bottom: 1px solid #eee; font-weight: 700; color: {$lvlColor}; background: #ffffff; word-break: break-all;'>{$levelPt}</td></tr>";
+        $accountText = __('conta', 'govbrsso');
+        $claimsRows = "<tr><td style='padding: 6px 12px; border-bottom: 1px solid #eee; font-weight: 700; color: {$lvlColor}; background: #ffffff; white-space: nowrap; vertical-align: top;'>{$accountText}</td><td style='padding: 6px 12px; border-bottom: 1px solid #eee; font-weight: 700; color: {$lvlColor}; background: #ffffff; word-break: break-all;'>{$levelPt}</td></tr>";
 
         $importantKeys = ['sub', 'name', 'social_name', 'email', 'email_verified', 'amr', 'profile', 'kid', 'iss', 'preferred_username', 'nonce', 'aud', 'auth_time', 'scope'];
         $orderedClaims = [];
@@ -224,32 +160,17 @@ if ($filterCpf === '') {
             ? substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2)
             : $cpf;
 
-        echo <<<CARD
-        <details style="margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden;">
-            <summary style="padding: 12px 16px; background: #f8f9fa; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 12px;">
-                <span style="background: {$lvlColor}; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">{$authTimeStr}</span>
-                <span style="font-weight: 600;">CPF: {$cpfFormatted}</span>
-                <span style="color: #888; font-size: 12px;">({$nome})</span>
-            </summary>
-            <div style="padding: 12px;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                    <thead>
-                        <tr style="background: #f1f3f5;">
-                            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #dee2e6; width: 200px;">Claim</th>
-                            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Valor</th>
-                        </tr>
-
-                    </thead>
-                    <tbody>
-                        {$claimsRows}
-                    </tbody>
-                </table>
-            </div>
-        </details>
-CARD;
+        $entry['authTimeStr'] = $authTimeStr;
+        $entry['levelPt'] = $levelPt;
+        $entry['lvlColor'] = $lvlColor;
+        $entry['claimsRows'] = $claimsRows;
+        $entry['cpfFormatted'] = $cpfFormatted;
+        $entry['nome'] = $nome;
     }
+    unset($entry);
+    $params['entries'] = $entries;
 }
 
-echo '</div>';
+TemplateRenderer::getInstance()->display('@govbrsso/debug_claims.html.twig', $params);
 
 Html::footer();

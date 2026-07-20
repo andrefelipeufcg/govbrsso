@@ -14,7 +14,7 @@ use GlpiPlugin\Govbrsso\Config;
 include(__DIR__ . '/../../../inc/includes.php');
 
 if (!Config::isActive()) {
-    Html::displayErrorAndDie('Login Único gov.br não está configurado/ativo.');
+    Html::displayErrorAndDie(__('Login Único gov.br não está configurado/ativo.', 'govbrsso'));
 }
 
 $clientId = (string) Config::get('client_id');
