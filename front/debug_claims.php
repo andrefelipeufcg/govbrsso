@@ -31,20 +31,26 @@ $entries = [];
 if ($filterCpf !== '' && file_exists($logFile) && is_readable($logFile)) {
     $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if ($lines !== false) {
-        // Lê do final para o começo (mais recentes primeiro)
-        foreach (array_reverse($lines) as $line) {
+        $reversedLines = array_reverse($lines);
+        $count = count($reversedLines);
+        for ($i = 0; $i < $count; $i++) {
+            $line = $reversedLines[$i];
             if (strpos($line, '[CLAIMS]') === false) {
                 continue;
             }
 
-            // Extrai a data/hora do formato padrão do GLPI log
+            // A data no GLPI fica na linha ANTERIOR no log original (ou seja, a PRÓXIMA linha no array reverso)
             $timestamp = '';
-            if (preg_match('/(\d{4}-\d{2}-\d{2} \d{2}:\d{2})(?::\d{2})?/', $line, $m)) {
-                $dt = date_create($m[1]);
-                if ($dt) {
-                    $timestamp = date_format($dt, 'd-m-Y H:i');
-                } else {
-                    $timestamp = $m[1];
+            if ($i + 1 < $count) {
+                $prevLine = $reversedLines[$i + 1];
+                // Formato do log do GLPI: "YYYY-MM-DD HH:MM:SS [@hostname]" ou similar
+                if (preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2})?)/', $prevLine, $m)) {
+                    $dt = date_create($m[1]);
+                    if ($dt) {
+                        $timestamp = date_format($dt, 'd-m-Y H:i:s');
+                    } else {
+                        $timestamp = $m[1];
+                    }
                 }
             }
 
@@ -101,11 +107,8 @@ if (!empty($entries)) {
         $cpf = htmlspecialchars($entry['cpf']);
         $nome = htmlspecialchars($entry['claims']['name'] ?? 'Sem Nome');
 
-        // Pega o auth_time das claims para a data (unix timestamp)
+        // Usa a data do log em vez do auth_time do token (pois o auth_time pode ser o mesmo em vários logins se a sessão no provedor ainda for válida)
         $authTimeStr = $tsFallback;
-        if (isset($entry['claims']['auth_time']) && is_numeric($entry['claims']['auth_time'])) {
-            $authTimeStr = date('d-m-Y H:i:s', (int)$entry['claims']['auth_time']);
-        }
 
         // Conta nível
         $levelCode = \GlpiPlugin\Govbrsso\UserManager::getLevel($entry['claims']);
