@@ -25,65 +25,82 @@ Html::header('Gov.br SSO - Diagnóstico de Claims', $_SERVER['REQUEST_URI'], 'co
 $filterCpf = trim((string)($_GET['cpf'] ?? ''));
 $filterCpf = preg_replace('/\D+/', '', $filterCpf);
 
-$logFile = GLPI_LOG_DIR . '/govbrsso.log';
 $entries = [];
 
-if ($filterCpf !== '' && file_exists($logFile) && is_readable($logFile)) {
-    $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($lines !== false) {
-        $reversedLines = array_reverse($lines);
-        $count = count($reversedLines);
-        for ($i = 0; $i < $count; $i++) {
-            $line = $reversedLines[$i];
-            if (strpos($line, '[CLAIMS]') === false) {
+if ($filterCpf !== '') {
+    $logFiles = glob(GLPI_LOG_DIR . '/govbrsso.log*');
+    if ($logFiles !== false) {
+        usort($logFiles, function($a, $b) {
+            if ($a === $b) return 0;
+            $baseA = basename($a);
+            $baseB = basename($b);
+            if ($baseA === 'govbrsso.log') return -1;
+            if ($baseB === 'govbrsso.log') return 1;
+            return strcmp($baseB, $baseA); // Ordem decrescente para os .bak
+        });
+
+        foreach ($logFiles as $logFile) {
+            if (!is_readable($logFile)) {
                 continue;
             }
+            
+            $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if ($lines !== false) {
+                $reversedLines = array_reverse($lines);
+                $count = count($reversedLines);
+                for ($i = 0; $i < $count; $i++) {
+                    $line = $reversedLines[$i];
+                    if (strpos($line, '[CLAIMS]') === false) {
+                        continue;
+                    }
 
-            // A data no GLPI fica na linha ANTERIOR no log original (ou seja, a PRÓXIMA linha no array reverso)
-            $timestamp = '';
-            if ($i + 1 < $count) {
-                $prevLine = $reversedLines[$i + 1];
-                // Formato do log do GLPI: "YYYY-MM-DD HH:MM:SS [@hostname]" ou similar
-                if (preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2})?)/', $prevLine, $m)) {
-                    $dt = date_create($m[1]);
-                    if ($dt) {
-                        $timestamp = date_format($dt, 'd-m-Y H:i:s');
-                    } else {
-                        $timestamp = $m[1];
+                    // A data no GLPI fica na linha ANTERIOR no log original (ou seja, a PRÓXIMA linha no array reverso)
+                    $timestamp = '';
+                    if ($i + 1 < $count) {
+                        $prevLine = $reversedLines[$i + 1];
+                        // Formato do log do GLPI: "YYYY-MM-DD HH:MM:SS [@hostname]" ou similar
+                        if (preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2})?)/', $prevLine, $m)) {
+                            $dt = date_create($m[1]);
+                            if ($dt) {
+                                $timestamp = date_format($dt, 'd-m-Y H:i:s');
+                            } else {
+                                $timestamp = $m[1];
+                            }
+                        }
+                    }
+
+                    // Extrai o CPF
+                    $cpf = '';
+                    if (preg_match('/CPF=(\d+)/', $line, $m)) {
+                        $cpf = $m[1];
+                    }
+
+                    if ($cpf !== $filterCpf) {
+                        continue;
+                    }
+
+                    // Extrai o JSON das claims
+                    $claims = [];
+                    $jsonStart = strpos($line, '| {');
+                    if ($jsonStart !== false) {
+                        $jsonStr = substr($line, $jsonStart + 2);
+                        $decoded = json_decode($jsonStr, true);
+                        if (is_array($decoded)) {
+                            $claims = $decoded;
+                        }
+                    }
+
+                    $entries[] = [
+                        'timestamp' => $timestamp,
+                        'cpf'       => $cpf,
+                        'claims'    => $claims,
+                    ];
+
+                    // Limita a 50 entradas para não travar a interface
+                    if (count($entries) >= 50) {
+                        break 2;
                     }
                 }
-            }
-
-            // Extrai o CPF
-            $cpf = '';
-            if (preg_match('/CPF=(\d+)/', $line, $m)) {
-                $cpf = $m[1];
-            }
-
-            if ($cpf !== $filterCpf) {
-                continue;
-            }
-
-            // Extrai o JSON das claims
-            $claims = [];
-            $jsonStart = strpos($line, '| {');
-            if ($jsonStart !== false) {
-                $jsonStr = substr($line, $jsonStart + 2);
-                $decoded = json_decode($jsonStr, true);
-                if (is_array($decoded)) {
-                    $claims = $decoded;
-                }
-            }
-
-            $entries[] = [
-                'timestamp' => $timestamp,
-                'cpf'       => $cpf,
-                'claims'    => $claims,
-            ];
-
-            // Limita a 100 entradas para não travar a interface
-            if (count($entries) >= 100) {
-                break;
             }
         }
     }

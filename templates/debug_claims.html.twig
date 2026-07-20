@@ -13,12 +13,12 @@
         <strong>{{ __('Como funciona:', 'govbrsso') }}</strong> {{ __('Cada vez que um usuário faz login via Gov.br, todas as informações (claims) recebidas do provedor são gravadas no log. Digite o CPF abaixo para buscar os registros de login e investigar problemas de criação duplicada de contas ou divergência de e-mails.', 'govbrsso') }}
     </div>
 
-    <form method="get" action="{{ selfUrl }}" style="display: flex; gap: 10px; margin-bottom: 25px; align-items: center;">
+    <form id="debug-form" method="get" action="{{ selfUrl }}" style="display: flex; gap: 10px; margin-bottom: 25px; align-items: center;">
         <label for="cpf" style="font-weight: 600; color: #333; white-space: nowrap;">{{ __('Buscar por CPF:', 'govbrsso') }}</label>
         <input type="text" id="cpf" name="cpf" value="{{ filterCpfSafe }}" placeholder="000.000.000-00" 
                maxlength="14" inputmode="numeric"
                style="flex: 1; max-width: 300px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: monospace;">
-        <button type="submit" style="padding: 8px 20px; background: #1351b4; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
+        <button type="submit" id="btn-buscar" style="padding: 8px 20px; background: #1351b4; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
             {{ __('Buscar', 'govbrsso') }}
         </button>
     </form>
@@ -56,6 +56,18 @@
                 e.preventDefault();
             }
         });
+
+        var form = document.getElementById('debug-form');
+        var btnBuscar = document.getElementById('btn-buscar');
+        
+        if (form && btnBuscar) {
+            form.addEventListener('submit', function() {
+                btnBuscar.disabled = true;
+                btnBuscar.style.opacity = '0.7';
+                btnBuscar.style.cursor = 'wait';
+                btnBuscar.innerHTML = '{{ __('Carregando...', 'govbrsso') }}';
+            });
+        }
     })();
     </script>
 
