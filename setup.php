@@ -4,14 +4,14 @@
  * Plugin "govbrsso" — Login Único gov.br (OIDC/PKCE) para GLPI 11.
  *
  * @license GPLv3+
- * @link    https://acesso.gov.br/roteiro-tecnico/
+ * @link    https://github.com/andrefelipeufcg/govbrsso/
  */
 
 use Glpi\Http\Firewall;
 use Glpi\Plugin\Hooks;
 use GlpiPlugin\Govbrsso\Config;
 
-define('PLUGIN_GOVBRSSO_VERSION', '1.0.0');
+define('PLUGIN_GOVBRSSO_VERSION', '1.0.1');
 
 // Versão mínima (inclusiva) e máxima (exclusiva) do GLPI suportada.
 define('PLUGIN_GOVBRSSO_MIN_GLPI', '11.0.0');
