@@ -87,6 +87,7 @@ $selfUrl = $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/debug_claims.php';
 $filterCpfSafe = htmlspecialchars($filterCpf);
 
 $params = [
+    'root_doc'      => $CFG_GLPI['root_doc'],
     'selfUrl'       => $selfUrl,
     'filterCpf'     => $filterCpf,
     'filterCpfSafe' => $filterCpfSafe,
