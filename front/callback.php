@@ -18,17 +18,9 @@ include(__DIR__ . '/../../../inc/includes.php');
 global $CFG_GLPI;
 
 
-function displayFriendlyError($msg) {
+function displayFriendlyError($msg, $debug = null) {
     global $CFG_GLPI;
-    $title = __('Authentication Error', 'govbrsso');
-    $backText = __('Back to Login', 'govbrsso');
-    Html::nullHeader($title, $CFG_GLPI['root_doc'] . '/index.php');
-    echo "<div style='display: flex; justify-content: center; align-items: center; min-height: 50vh;'>";
-    echo "<div style='background: #fff3f3; border-left: 5px solid #d9534f; padding: 30px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; font-family: sans-serif;'>";
-    echo "<h2 style='color: #d9534f; margin-top: 0; font-size: 20px;'>" . $title . "</h2>";
-    echo "<p style='font-size: 16px; color: #444; margin-bottom: 25px; line-height: 1.5;'>" . htmlspecialchars($msg) . "</p>";
-    echo "<a href='" . $CFG_GLPI['root_doc'] . "/index.php' style='display: inline-block; padding: 10px 20px; background: #0056b3; color: white; text-decoration: none; border-radius: 4px; font-weight: 500;'>" . $backText . "</a>";
-    Html::header(__('Erro de Autenticação', 'govbrsso'), $_SERVER['PHP_SELF']);
+    Html::nullHeader(__('Erro de Autenticação', 'govbrsso'), $CFG_GLPI['root_doc'] . '/index.php');
     echo "<div class='center my-4'>";
     echo "<h2>" . __('Erro de Autenticação', 'govbrsso') . "</h2>";
     echo "<p>".htmlspecialchars($msg)."</p>";
@@ -37,7 +29,7 @@ function displayFriendlyError($msg) {
     }
     echo "<a href='{$CFG_GLPI['root_doc']}/index.php' class='btn btn-primary'>" . __('Voltar para o Login', 'govbrsso') . "</a>";
     echo "</div>";
-    Html::footer();
+    Html::nullFooter();
     die();
 }
 
