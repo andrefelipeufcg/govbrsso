@@ -62,6 +62,11 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
     $found = false;
     $login = preg_replace('/\D+/', '', $cpf);
     
+    // Security Note: Atraso artificial para mascarar o tempo de resposta do banco e prevenir 
+    // ataques de enumeração baseados em tempo (timing attacks) caso o simulador seja exposto.
+    usleep(random_int(100000, 300000));
+
+    
     if ($loginField === 'email') {
         if ($email === '') {
             $timeline[] = [

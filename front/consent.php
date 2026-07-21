@@ -22,14 +22,17 @@ if (!isset($_SESSION['govbrsso_pending_claims'])) {
 $claims = $_SESSION['govbrsso_pending_claims'];
 
 // Processamento da Confirmação
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    Toolbox::logInFile('govbrsso', "[CONSENT] POST recebido. confirm=" . ($_POST['confirm'] ?? 'N/A') . " csrf_present=" . (isset($_POST['_glpi_csrf_token']) ? 'sim' : 'não') . "\n");
+if (isset($_GET['confirm'])) {
+    Toolbox::logInFile('govbrsso', "[CONSENT] Ação recebida. confirm=" . ($_GET['confirm'] ?? 'N/A') . " csrf_present=" . (isset($_GET['govbrsso_custom_csrf']) ? 'sim' : 'não') . "\n");
     
-    if (!isset($_POST['confirm'])) {
-        Toolbox::logInFile('govbrsso', "[CONSENT] Campo 'confirm' ausente no POST.\n");
+    // Validação de CSRF Customizada (Bypass para sessão anônima do GLPI)
+    $reqCsrf = $_GET['govbrsso_custom_csrf'] ?? '';
+    if (!isset($_SESSION['govbrsso_custom_csrf']) || $reqCsrf === '' || !hash_equals($_SESSION['govbrsso_custom_csrf'], $reqCsrf)) {
+        Toolbox::logInFile('govbrsso', "[CONSENT] Falha na validação do CSRF customizado.\n");
+        echo "<!DOCTYPE html><html><body><h2>Erro de Segurança (CSRF)</h2><p>Sua requisição expirou ou é inválida. Volte para a página de login.</p></body></html>";
+        die();
     }
-    
-    if (isset($_POST['confirm'])) {
+
         Toolbox::logInFile('govbrsso', "[CONSENT] Iniciando criação do usuário...\n");
         
         // Tenta criar e logar o usuário com forceCreate = true
@@ -82,7 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         Html::redirect($dest);
     }
-}
 
 // Preparação para exibição da tela
 $name = trim((string) ($claims['name'] ?? ''));
@@ -126,7 +128,10 @@ if ($primaryEmail !== '') {
 
 Html::nullHeader(__('Confirmação de Criação de Conta', 'govbrsso'), $CFG_GLPI['root_doc'] . '/index.php');
 
-$csrf = Session::getNewCSRFToken();
+if (!isset($_SESSION['govbrsso_custom_csrf'])) {
+    $_SESSION['govbrsso_custom_csrf'] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION['govbrsso_custom_csrf'];
 
 $params = [
     'root_doc'   => $CFG_GLPI['root_doc'],
