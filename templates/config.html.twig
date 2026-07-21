@@ -131,6 +131,11 @@
                         <select name="default_entity_id" class="form-select searchable-select">{{ defEntOpts|raw }}</select>
                     </div>
                 </div>
+                
+                <div style="background: #eef9fd; border-left: 4px solid #178abb; padding: 12px 16px; border-radius: 4px; color: #1a3e72; font-size: 14px; margin-top: 15px;">
+                    <strong>🧪 {{ __('Simulador:', 'govbrsso') }}</strong> {{ __('Para testar as regras de criação de contas e descobrir qual Perfil/Entidade será atribuído a um e-mail,', 'govbrsso') }}
+                    <a href="{{ root_doc }}/plugins/govbrsso/front/simulator.php" style="color: #178abb; font-weight: 600; text-decoration: none;">{{ __('clique aqui', 'govbrsso') }}</a>.
+                </div>
             </div>
 
             <hr class="my-4">

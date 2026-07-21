@@ -23,7 +23,7 @@ function displayFriendlyError($msg, $debug = null) {
     $title = __('Erro de Autenticação', 'govbrsso');
     $backText = __('Voltar para o Login', 'govbrsso');
     
-    Html::nullHeader($title, $CFG_GLPI['root_doc'] . '/index.php');
+    Html::nullHeader($title, $CFG_GLPI['root_doc'] . '/index.php?noAUTO=1');
     
     echo "<div style='display: flex; justify-content: center; align-items: center; min-height: 50vh; padding: 20px;'>";
     echo "<div style='background: #fff3f3; border-left: 5px solid #d9534f; padding: 30px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; font-family: sans-serif; width: 100%; text-align: left;'>";
@@ -34,7 +34,7 @@ function displayFriendlyError($msg, $debug = null) {
         echo "<pre style='text-align:left; background:#f8f9fa; padding:15px; border:1px solid #ddd; font-size: 13px; color: #333; overflow-x: auto; margin-bottom: 25px;'>" . htmlspecialchars(print_r($debug, true), ENT_QUOTES, 'UTF-8') . "</pre>";
     }
     
-    echo "<a href='" . $CFG_GLPI['root_doc'] . "/index.php' style='display: inline-block; padding: 10px 20px; background: #0056b3; color: white; text-decoration: none; border-radius: 4px; font-weight: 500; text-align: center;'>" . $backText . "</a>";
+    echo "<a href='" . $CFG_GLPI['root_doc'] . "/index.php?noAUTO=1' style='display: inline-block; padding: 10px 20px; background: #0056b3; color: white; text-decoration: none; border-radius: 4px; font-weight: 500; text-align: center;'>" . $backText . "</a>";
     
     echo "</div></div>";
     
@@ -122,6 +122,10 @@ Toolbox::logInFile(
 
 // Efetua o login no GLPI.
 $result = UserManager::loginFromClaims($claims);
+
+if (isset($result['consent_required']) && $result['consent_required']) {
+    Html::redirect($CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/consent.php');
+}
 
 if (!$result['ok']) {
     $cpf   = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';

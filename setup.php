@@ -11,7 +11,7 @@ use Glpi\Http\Firewall;
 use Glpi\Plugin\Hooks;
 use GlpiPlugin\Govbrsso\Config;
 
-define('PLUGIN_GOVBRSSO_VERSION', '1.0.1');
+define('PLUGIN_GOVBRSSO_VERSION', '1.0.2');
 
 // Versão mínima (inclusiva) e máxima (exclusiva) do GLPI suportada.
 define('PLUGIN_GOVBRSSO_MIN_GLPI', '11.0.0');
@@ -32,6 +32,11 @@ function plugin_govbrsso_boot(): void
     Firewall::addPluginStrategyForLegacyScripts(
         'govbrsso',
         '#^/front/callback\\.php$#',
+        Firewall::STRATEGY_NO_CHECK,
+    );
+    Firewall::addPluginStrategyForLegacyScripts(
+        'govbrsso',
+        '#^/front/consent\\.php$#',
         Firewall::STRATEGY_NO_CHECK,
     );
     Firewall::addPluginStrategyForLegacyScripts(

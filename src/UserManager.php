@@ -21,9 +21,10 @@ final class UserManager
 {
     /**
      * @param array<string,mixed> $claims  claims combinados (id_token + userinfo)
-     * @return array{ok:bool,error:string}
+     * @param bool $forceCreate Se true, cria o usuário diretamente (após o consentimento).
+     * @return array{ok:bool,error?:string,consent_required?:bool}
      */
-    public static function loginFromClaims(array $claims): array
+    public static function loginFromClaims(array $claims, bool $forceCreate = false): array
     {
         $cpf   = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';
         $name  = trim((string) ($claims['name'] ?? ''));
@@ -99,11 +100,24 @@ final class UserManager
         }
 
         if (!$found && Config::get('auto_create') === '1') {
+            
+            if (!$forceCreate) {
+                $_SESSION['govbrsso_pending_claims'] = $claims;
+                return ['ok' => false, 'consent_required' => true];
+            }
+            
+            // Separa o nome completo do Gov.br em Nome (firstname) e Sobrenome (realname)
+            $nameParts = $name !== '' ? preg_split('/\s+/', $name, 2) : [];
+            $firstName = $nameParts[0] ?? '';
+            $lastName  = $nameParts[1] ?? '';
+            
             $input = [
-                'name'     => $login,
-                'realname' => $name !== '' ? $name : null,
-                'authtype' => Auth::EXTERNAL,
-                'comment'  => __('Criado via Login Único gov.br', 'govbrsso'),
+                'name'      => $login,
+                'firstname' => $firstName !== '' ? $firstName : null,
+                'realname'  => $lastName !== '' ? $lastName : null,
+                'authtype'  => Auth::EXTERNAL,
+                'is_active' => 1,
+                'comment'   => __('Criado via Login Único gov.br', 'govbrsso'),
             ];
             if ($primaryEmail !== '') {
                 $input['_useremails'] = [-1 => $primaryEmail];
@@ -133,17 +147,43 @@ final class UserManager
                 $entity_id  = (int)Config::get('default_entity_id', '0');
             }
             
-            if ($profile_id > 0) {
-                $input['_profiles_id']  = $profile_id;
-                $input['_entities_id']  = $entity_id;
-                $input['_is_recursive'] = 1;
-            }
+            // NÃO passamos _profiles_id no add() — o GLPI 11 ignora e adiciona
+            // o perfil padrão global (Self-Service) de qualquer forma. Vamos
+            // gerenciar o perfil manualmente após a criação.
             // -----------------------------------
 
             $id = $user->add($input);
             if (!$id) {
-                return ['ok' => false, 'error' => __('Falha ao criar o usuário no GLPI.', 'govbrsso')];
+                $glpiErrors = '';
+                if (isset($_SESSION['MESSAGE_AFTER_REDIRECT'][ERROR])) {
+                    $glpiErrors = implode(' ', $_SESSION['MESSAGE_AFTER_REDIRECT'][ERROR]);
+                    unset($_SESSION['MESSAGE_AFTER_REDIRECT'][ERROR]);
+                }
+                $errMsg = __('Falha ao criar o usuário no GLPI.', 'govbrsso');
+                if ($glpiErrors !== '') {
+                    $errMsg .= ' ' . __('Detalhes:', 'govbrsso') . ' ' . $glpiErrors;
+                }
+                return ['ok' => false, 'error' => $errMsg];
             }
+            
+            // Remove TODOS os perfis auto-atribuídos pelo GLPI (ex: Self-Service)
+            // e adiciona apenas o perfil configurado no plugin.
+            if ($profile_id > 0) {
+                $profUser = new \Profile_User();
+                // Apaga qualquer perfil que o core tenha atribuído automaticamente
+                $autoProfiles = $profUser->find(['users_id' => $id]);
+                foreach ($autoProfiles as $ap) {
+                    $profUser->delete(['id' => $ap['id']], true);
+                }
+                // Adiciona o perfil correto conforme regras do plugin
+                $profUser->add([
+                    'users_id'     => $id,
+                    'profiles_id'  => $profile_id,
+                    'entities_id'  => $entity_id,
+                    'is_recursive' => 1
+                ]);
+            }
+            
             $user->getFromDB($id);
         } elseif (!$found) {
             return ['ok' => false, 'error' => sprintf(__("Usuário '%s' não existe e a criação automática está desativada.", 'govbrsso'), $login)];
@@ -158,74 +198,30 @@ final class UserManager
      */
     private static function performExternalLogin(User $user, string $email, string $levelPt): array
     {
-        /** @var \DBmysql $DB */
-        global $CFG_GLPI, $DB;
-
         $login = (string) $user->fields['name'];
 
-        // Localiza a variável SSO dedicada criada na instalação.
-        $ssoId = null;
-        $rows = $DB->request([
-            'FROM'  => 'glpi_ssovariables',
-            'WHERE' => ['name' => Config::SSO_VARIABLE_NAME],
-            'LIMIT' => 1,
-        ]);
-        foreach ($rows as $row) {
-            $ssoId = (int) $row['id'];
-            break;
-        }
-        if ($ssoId === null) {
-            return ['ok' => false, 'error' => __('Variável SSO do plugin não encontrada (reinstale o plugin).', 'govbrsso')];
-        }
+        $auth                = new Auth();
+        $auth->auth_succeded = true;
+        $auth->user_present  = true;
+        $auth->extauth       = 1;
+        $auth->user          = $user;
+        $auth->user->fields['authtype'] = Auth::EXTERNAL;
 
-        // Contexto temporário de auth externa.
-        $origSso = $CFG_GLPI['ssovariables_id'] ?? 0;
-        $CFG_GLPI['ssovariables_id'] = $ssoId;
-        $_SERVER[Config::SSO_VARIABLE_NAME] = $login;
-
-        // Mapeia o e-mail para o GLPI casar/atualizar (campo SSO de e-mail).
-        $origEmailField = $CFG_GLPI['email1_ssofield'] ?? '';
-        if ($email !== '') {
-            $CFG_GLPI['email1_ssofield'] = 'GOVBRSSO_EMAIL';
-            $_SERVER['GOVBRSSO_EMAIL'] = $email;
+        $eventClass = \class_exists('\Glpi\Event') ? '\Glpi\Event' : (\class_exists('\Event') ? '\Event' : null);
+        if ($eventClass) {
+            $ip = getenv("HTTP_X_FORWARDED_FOR") ?: getenv("REMOTE_ADDR");
+            $eventClass::log(
+                $user->fields['id'],
+                "system", 
+                3, 
+                "login", 
+                sprintf(__('%1$s log in from IP %2$s'), $login, $ip) . " via Gov.BR nível {$levelPt} (SSO)"
+            );
         }
 
-        try {
-            $auth = new Auth();
-            $ok = $auth->login($login, '', false);
-
-            if ($ok) {
-                // Atualiza o evento de login recém-criado pelo Auth::login()
-                // para incluir a tag SSO e o ID do usuário (items_id), independentemente
-                // de o plugin authhistory estar ativado ou não.
-                global $DB;
-                $users_id = \Session::getLoginUserID();
-                if ($users_id) {
-                    $iterator = $DB->request([
-                        'FROM'  => 'glpi_events',
-                        'WHERE' => ['service' => 'login'],
-                        'ORDER' => 'id DESC',
-                        'LIMIT' => 1
-                    ]);
-                    if (count($iterator) > 0) {
-                        $event = $iterator->current();
-                        $message = $event['message'];
-                        if (strpos($message, 'via Gov.BR') === false) {
-                            $DB->update('glpi_events', [
-                                'items_id' => $users_id,
-                                'message'  => ltrim($message) . " via Gov.BR nível {$levelPt} (SSO)"
-                            ], ['id' => $event['id']]);
-                        }
-                    }
-                }
-            }
-        } finally {
-            // Limpeza do contexto temporário (em qualquer caso).
-            $CFG_GLPI['ssovariables_id'] = $origSso;
-            unset($_SERVER[Config::SSO_VARIABLE_NAME]);
-            $CFG_GLPI['email1_ssofield'] = $origEmailField;
-            unset($_SERVER['GOVBRSSO_EMAIL'], $_SESSION['glpi_remote_user']);
-        }
+        \Session::init($auth);
+        
+        $ok = (\Session::getLoginUserID() !== false);
 
         if (!$ok) {
             // Diagnóstico: usuário sem habilitação => falta regra.

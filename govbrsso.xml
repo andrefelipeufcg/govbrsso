@@ -1,7 +1,7 @@
 <root>
    <name>Login Único gov.br</name>
    <key>govbrsso</key>
-   <version>1.0.1</version>
+   <version>1.0.2</version>
    <state>stable</state>
    <logo>https://raw.githubusercontent.com/andrefelipeufcg/govbrsso/main/logo.png</logo>
    <description>
@@ -25,9 +25,9 @@
    </authors>
    <versions>
       <version>
-         <num>1.0.1</num>
-         <compatibility>&gt;=11.0.0</compatibility>
-         <download_url>https://github.com/andrefelipeufcg/govbrsso/archive/refs/tags/v1.0.1.zip</download_url>
+         <num>1.0.2</num>
+         <state>stable</state>
+         <download_url>https://github.com/andrefelipeufcg/govbrsso/archive/refs/tags/v1.0.2.zip</download_url>
       </version>
       <version>
          <num>1.0.0</num>
