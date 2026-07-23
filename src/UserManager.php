@@ -41,22 +41,6 @@ final class UserManager
         if (isset($claims['email']) && trim((string)$claims['email']) !== '' && $mainEmailVerified) {
             $verifiedEmails[] = trim((string)$claims['email']);
         }
-
-        if (isset($claims['emails']) && is_array($claims['emails'])) {
-            foreach ($claims['emails'] as $em) {
-                $emStr = trim((string)$em);
-                if ($emStr !== '' && !in_array($emStr, $verifiedEmails, true)) {
-                    $verifiedEmails[] = $emStr;
-                }
-            }
-        }
-
-        if (isset($claims['email_institucional']) && trim((string)$claims['email_institucional']) !== '') {
-            $emStr = trim((string)$claims['email_institucional']);
-            if (!in_array($emStr, $verifiedEmails, true)) {
-                $verifiedEmails[] = $emStr;
-            }
-        }
         
         $primaryEmail = $verifiedEmails[0] ?? '';
 

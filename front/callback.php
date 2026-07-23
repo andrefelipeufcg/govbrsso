@@ -82,7 +82,8 @@ if (isset($token['error']) || empty($token['access_token'])) {
         'code_challenge_sent_in_auth' => Client::codeChallenge($verifier),
         'token_response' => $token,
     ];
-    displayFriendlyError(__('Erro ao obter token do gov.br', 'govbrsso'), $debug);
+    Toolbox::logInFile('govbrsso', "[TOKEN_ERROR] " . print_r($debug, true));
+    displayFriendlyError(__('Erro ao obter token do gov.br', 'govbrsso'));
 }
 
 $accessToken = (string) $token['access_token'];
@@ -93,10 +94,22 @@ $claims = [];
 if ($idToken !== '') {
     if (!Client::verifySignature($idToken)) {
         Toolbox::logInFile('govbrsso', "Assinatura do id_token não validada (JWKS).\n");
-        // gov.br entrega via TLS direto do /token; seguimos com cautela e
-        // complementamos via /userinfo. Para rigor máximo, troque por die().
+        displayFriendlyError(__('Assinatura do id_token inválida.', 'govbrsso'));
     }
     $claims = Client::decodeJwtPayload($idToken);
+
+    $expectedIss = rtrim((string) Config::get('provider_url'), '/');
+    $iss = rtrim((string) ($claims['iss'] ?? ''), '/');
+    if ($iss !== $expectedIss) {
+        displayFriendlyError(__('Emissor (iss) do id_token inválido.', 'govbrsso'));
+    }
+
+    $expectedAud = (string) Config::get('client_id');
+    $aud = $claims['aud'] ?? '';
+    $auds = is_array($aud) ? $aud : [$aud];
+    if (!in_array($expectedAud, $auds, true)) {
+        displayFriendlyError(__('Audiência (aud) do id_token inválida.', 'govbrsso'));
+    }
 
     // Validação do nonce.
     $expectedNonce = (string) ($_SESSION['govbrsso_nonce'] ?? '');
