@@ -10,7 +10,10 @@
 use GlpiPlugin\Govbrsso\UserManager;
 use Glpi\Application\View\TemplateRenderer;
 
-include(__DIR__ . '/../../../inc/includes.php');
+$inc = __DIR__ . '/../../../inc/includes.php';
+if (!file_exists($inc)) { $inc = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/inc/includes.php'; }
+if (!file_exists($inc)) { $inc = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/../inc/includes.php'; }
+include $inc;
 global $CFG_GLPI;
 
 // Verifica se há claims pendentes na sessão
@@ -56,19 +59,22 @@ if (isset($_GET['confirm'])) {
             $cpf = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';
             Toolbox::logInFile('govbrsso', 'Falha na criação de conta (CPF: ' . $cpf . '): ' . $result['error'] . "\n");
 
-            // HTML puro para evitar 401 do Html::nullHeader()
             $title = __('Erro ao Criar Conta', 'govbrsso');
             $backText = __('Voltar para o Login', 'govbrsso');
-            $backUrl = htmlspecialchars($CFG_GLPI['root_doc']) . '/index.php?noAUTO=1';
+            $backUrl = $CFG_GLPI['root_doc'] . '/index.php?noAUTO=1';
 
-            echo "<!DOCTYPE html><html><head><meta charset='utf-8'><title>" . htmlspecialchars($title) . "</title></head>";
-            echo "<body style='background:#f4f6f8; font-family:sans-serif; margin:0; padding:0;'>";
-            echo "<div style='display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px;'>";
-            echo "<div style='background:#fff; border-left:5px solid #d9534f; padding:40px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-width:500px; width:100%;'>";
-            echo "<h2 style='color:#d9534f; margin-top:0;'>" . htmlspecialchars($title) . "</h2>";
-            echo "<p style='font-size:16px; color:#444; line-height:1.6; margin-bottom:30px;'>" . htmlspecialchars($result['error']) . "</p>";
-            echo "<a href='" . $backUrl . "' style='display:inline-block; padding:12px 24px; background:#1351b4; color:#fff; text-decoration:none; border-radius:6px; font-weight:600;'>" . htmlspecialchars($backText) . "</a>";
-            echo "</div></div></body></html>";
+            Html::nullHeader($title, $backUrl);
+
+            $params = [
+                'title'     => $title,
+                'msg'       => $result['error'],
+                'back_url'  => $backUrl,
+                'back_text' => $backText
+            ];
+
+            \Glpi\Application\View\TemplateRenderer::getInstance()->display('@govbrsso/error.html.twig', $params);
+
+            Html::nullFooter();
             die();
         }
 
@@ -94,20 +100,6 @@ $verifiedEmails = [];
 $mainEmailVerified = ($claims['email_verified'] ?? false) === true || ($claims['email_verified'] ?? '') === 'true';
 if (isset($claims['email']) && trim((string)$claims['email']) !== '' && $mainEmailVerified) {
     $verifiedEmails[] = trim((string)$claims['email']);
-}
-if (isset($claims['emails']) && is_array($claims['emails'])) {
-    foreach ($claims['emails'] as $em) {
-        $emStr = trim((string)$em);
-        if ($emStr !== '' && !in_array($emStr, $verifiedEmails, true)) {
-            $verifiedEmails[] = $emStr;
-        }
-    }
-}
-if (isset($claims['email_institucional']) && trim((string)$claims['email_institucional']) !== '') {
-    $emStr = trim((string)$claims['email_institucional']);
-    if (!in_array($emStr, $verifiedEmails, true)) {
-        $verifiedEmails[] = $emStr;
-    }
 }
 $primaryEmail = $verifiedEmails[0] ?? '';
 

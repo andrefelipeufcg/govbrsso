@@ -13,6 +13,20 @@
         <strong>{{ __('Como funciona:', 'govbrsso') }}</strong> {{ __('Cada vez que um usuário faz login via Gov.br, todas as informações (claims) recebidas do provedor são gravadas no log. Digite o CPF abaixo para buscar os registros de login e investigar problemas de criação duplicada de contas ou divergência de e-mails.', 'govbrsso') }}
     </div>
 
+    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 16px; margin-bottom: 20px; font-size: 14px; color: #92400e; line-height: 1.6;">
+        <strong>{{ __('Nota sobre Retenção de Dados e Logs (Diagnóstico):', 'govbrsso') }}</strong> {{ __('O plugin grava as claims de identidade dos usuários (incluindo CPF, nome e e-mails de forma parcial ou total) nos arquivos de log estáticos do GLPI (files/_log/govbrsso.log) com o propósito exclusivo de diagnóstico e rastreabilidade técnica. O GLPI nativamente não aplica uma política automática de rotação e exclusão (expurgo) sobre plugins de terceiros. Portanto, recomenda-se configurar rotinas automatizadas no servidor (ex: logrotate ou tarefas programadas) para expurgar periodicamente estes logs e não reter dados pessoais sensíveis indefinidamente, garantindo conformidade com a LGPD.', 'govbrsso') }}
+        
+        <p style="margin: 15px 0 10px 0; font-size: 13px;">
+            <strong>{{ __('Ação manual:', 'govbrsso') }}</strong> {{ __('Caso deseje apagar os logs de diagnóstico anteriores ao dia de hoje (arquivos .bak) agora mesmo, utilize o botão abaixo:', 'govbrsso') }}
+        </p>
+        <form method="post" action="{{ selfUrl }}" style="margin-top: 5px;" onsubmit="return confirm('{{ __('Tem certeza que quer apagar os logs anteriores ao dia de hoje (arquivos .bak)?', 'govbrsso') }}');">
+            <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" name="purge_bak_logs" value="1" style="background: #d97706; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                {{ __('Limpar Logs Antigos (.bak)', 'govbrsso') }}
+            </button>
+        </form>
+    </div>
+
     <form id="debug-form" method="get" action="{{ selfUrl }}" style="display: flex; gap: 10px; margin-bottom: 25px; align-items: center;">
         <label for="cpf" style="font-weight: 600; color: #333; white-space: nowrap;">{{ __('Buscar por CPF:', 'govbrsso') }}</label>
         <input type="text" id="cpf" name="cpf" value="{{ filterCpfSafe }}" placeholder="000.000.000-00" 

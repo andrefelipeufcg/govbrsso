@@ -11,7 +11,10 @@
 
 use GlpiPlugin\Govbrsso\Config;
 
-include(__DIR__ . '/../../../inc/includes.php');
+$inc = __DIR__ . '/../../../inc/includes.php';
+if (!file_exists($inc)) { $inc = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/inc/includes.php'; }
+if (!file_exists($inc)) { $inc = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/../inc/includes.php'; }
+include $inc;
 
 // Encerra a sessão local do GLPI.
 Session::destroy();

@@ -11,7 +11,7 @@ use Glpi\Http\Firewall;
 use Glpi\Plugin\Hooks;
 use GlpiPlugin\Govbrsso\Config;
 
-define('PLUGIN_GOVBRSSO_VERSION', '1.0.3');
+define('PLUGIN_GOVBRSSO_VERSION', '1.0.4');
 
 // Versão mínima (inclusiva) e máxima (exclusiva) do GLPI suportada.
 define('PLUGIN_GOVBRSSO_MIN_GLPI', '11.0.0');
@@ -68,6 +68,9 @@ function plugin_init_govbrsso(): void
     // veja o README para a alternativa via POST_INIT/JS — o botão também
     // funciona como link direto para /plugins/govbrsso/front/redirect.php.
     $PLUGIN_HOOKS['display_login']['govbrsso'] = 'plugin_govbrsso_display_login';
+
+    // Ocultar client_secret
+    $PLUGIN_HOOKS[Hooks::UNDISCLOSED_CONFIG_VALUE]['govbrsso'] = 'plugin_govbrsso_undisclosed_config_value';
 }
 
 /**
@@ -126,4 +129,15 @@ function plugin_govbrsso_check_config(): bool
 function plugin_govbrsso_display_login(): void
 {
     echo Config::renderLoginButton();
+}
+
+/**
+ * Oculta o client_secret de dumps de debug e exportações do GLPI.
+ */
+function plugin_govbrsso_undisclosed_config_value(array $fields): array
+{
+    if (($fields['context'] ?? '') === Config::CONTEXT && ($fields['name'] ?? '') === 'client_secret') {
+        unset($fields['value']);
+    }
+    return $fields;
 }
