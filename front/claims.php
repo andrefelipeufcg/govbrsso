@@ -23,6 +23,23 @@ global $CFG_GLPI;
 
 Session::checkRight('config', UPDATE);
 
+if (isset($_POST['purge_bak_logs'])) {
+    $purged = 0;
+    $logFiles = glob(GLPI_LOG_DIR . '/govbrsso.log*.bak');
+    if ($logFiles !== false) {
+        foreach ($logFiles as $logFile) {
+            if (is_file($logFile) && is_writable($logFile)) {
+                unlink($logFile);
+                $purged++;
+            }
+        }
+    }
+    Session::addMessageAfterRedirect(
+        sprintf(__('Foram apagados %d arquivos de log antigos (.bak).', 'govbrsso'), $purged)
+    );
+    Html::redirect($_SERVER['REQUEST_URI']);
+}
+
 Html::header('Gov.br SSO - Diagnóstico de Claims', $_SERVER['REQUEST_URI'], 'config', 'plugins');
 
 $filterCpf = trim((string)($_GET['cpf'] ?? ''));
