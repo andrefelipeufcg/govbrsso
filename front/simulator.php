@@ -34,7 +34,7 @@ $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
 
 $result = null;
 
-if ($isPost && ($cpf !== '' || $email !== '')) {
+if ($isPost) {
     $timeline = []; // Array de etapas detalhadas
     $finalStatus = 'success';
     $finalMessage = '';
