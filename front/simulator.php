@@ -50,7 +50,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
         'source' => 'Plugin',
         'icon' => '⚙️',
         'desc' => sprintf(
-            'Campo de login: <strong>%s</strong> | Criação automática: <strong>%s</strong> | Nível mínimo: <strong>%s</strong>',
+            'Campo de login: %s | Criação automática: %s | Nível mínimo: %s',
             $loginField === 'email' ? 'E-mail' : 'CPF',
             $autoCreate ? 'Sim' : 'Não',
             $minLevel !== '' ? ucfirst($minLevel) : 'Nenhum'
@@ -73,7 +73,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'step' => 'Validação de E-mail',
                 'source' => 'Plugin',
                 'icon' => '🚫',
-                'desc' => 'E-mail não fornecido. O plugin bloquearia o acesso com a mensagem: <em>"Seu cadastro no gov.br não possui um e-mail validado."</em>'
+                'desc' => 'E-mail não fornecido. O plugin bloquearia o acesso com a mensagem: "Seu cadastro no gov.br não possui um e-mail validado."'
             ];
             $finalStatus = 'error';
             $finalMessage = __('Login bloqueado: e-mail validado obrigatório quando o campo de login é E-mail.', 'govbrsso');
@@ -82,7 +82,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'step' => 'Validação de E-mail',
                 'source' => 'Plugin',
                 'icon' => '✅',
-                'desc' => sprintf('E-mail validado presente: <strong>%s</strong>', htmlspecialchars($email))
+                'desc' => sprintf('E-mail validado presente: %s', htmlspecialchars($email))
             ];
             
             if ($user->getFromDBbyName($email)) {
@@ -92,7 +92,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'step' => 'Busca no Banco de Dados',
                     'source' => 'Plugin',
                     'icon' => '🔍',
-                    'desc' => sprintf('Usuário encontrado pelo e-mail: <strong>%s</strong> (ID: %d)', htmlspecialchars($email), $user->fields['id'])
+                    'desc' => sprintf('Usuário encontrado pelo e-mail: %s (ID: %d)', htmlspecialchars($email), $user->fields['id'])
                 ];
             } else {
                 $login = $email;
@@ -100,7 +100,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'step' => 'Busca no Banco de Dados',
                     'source' => 'Plugin',
                     'icon' => '🔍',
-                    'desc' => sprintf('Nenhum usuário encontrado com o login <strong>%s</strong>', htmlspecialchars($email))
+                    'desc' => sprintf('Nenhum usuário encontrado com o login %s', htmlspecialchars($email))
                 ];
             }
         }
@@ -123,8 +123,8 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'source' => 'Plugin',
                 'icon' => '🔍',
                 'desc' => $found 
-                    ? sprintf('Usuário encontrado pelo CPF: <strong>%s</strong> (ID: %d)', $cpfClean, $user->fields['id'])
-                    : sprintf('Nenhum usuário encontrado com o login <strong>%s</strong>', $cpfClean)
+                    ? sprintf('Usuário encontrado pelo CPF: %s (ID: %d)', $cpfClean, $user->fields['id'])
+                    : sprintf('Nenhum usuário encontrado com o login %s', $cpfClean)
             ];
         }
     }
@@ -136,7 +136,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'step' => 'Login em Conta Existente',
                 'source' => 'Plugin',
                 'icon' => '🔑',
-                'desc' => sprintf('O sistema faria login na conta existente <strong>%s</strong> (ID: %d). Nenhuma conta nova seria criada.', htmlspecialchars($user->fields['name']), $user->fields['id'])
+                'desc' => sprintf('O sistema faria login na conta existente %s (ID: %d). Nenhuma conta nova seria criada.', htmlspecialchars($user->fields['name']), $user->fields['id'])
             ];
             $finalStatus = 'success';
             $finalMessage = sprintf(__('Usuário "%s" já existe. Login seria realizado com sucesso.', 'govbrsso'), $login);
@@ -145,7 +145,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'step' => 'Criação Automática Desativada',
                 'source' => 'Plugin',
                 'icon' => '⚠️',
-                'desc' => 'A configuração "Criar usuário" está <strong>DESATIVADA</strong>. O login seria bloqueado.'
+                'desc' => 'A configuração "Criar usuário" está DESATIVADA. O login seria bloqueado.'
             ];
             $finalStatus = 'warning';
             $finalMessage = sprintf(__('O usuário "%s" NÃO existe e a criação automática está desativada.', 'govbrsso'), $login);
@@ -157,7 +157,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'step' => 'Tela de Consentimento',
                 'source' => 'Plugin',
                 'icon' => '🛡️',
-                'desc' => 'O plugin exibiria a tela de consentimento perguntando se o usuário deseja criar a conta. Simulando que o usuário clicou <strong>"Sim"</strong>.'
+                'desc' => 'O plugin exibiria a tela de consentimento perguntando se o usuário deseja criar a conta. Simulando que o usuário clicou "Sim".'
             ];
             
             // Separação de Nome/Sobrenome
@@ -170,10 +170,10 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'source' => 'Plugin',
                     'icon' => '👤',
                     'desc' => sprintf(
-                        'Nome completo "<strong>%s</strong>" separado em: Nome = <strong>%s</strong>, Sobrenome = <strong>%s</strong>',
+                        'Nome completo "%s" separado em: Nome = %s, Sobrenome = %s',
                         htmlspecialchars($nome),
                         htmlspecialchars($firstName),
-                        $lastName !== '' ? htmlspecialchars($lastName) : '<em>(vazio)</em>'
+                        $lastName !== '' ? htmlspecialchars($lastName) : '(vazio)'
                     )
                 ];
             }
@@ -210,7 +210,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'source' => 'Plugin',
                     'icon' => '📋',
                     'desc' => sprintf(
-                        'Domínio extraído: <strong>@%s</strong>. Regra aplicada: <strong>%s</strong>',
+                        'Domínio extraído: @%s. Regra aplicada: %s',
                         htmlspecialchars($domain),
                         $ruleApplied
                     )
@@ -220,7 +220,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'step' => 'Regras de Domínio',
                     'source' => 'Plugin',
                     'icon' => '📋',
-                    'desc' => 'Nenhum domínio de e-mail disponível. Usando <strong>Regra Padrão (Fallback)</strong>.'
+                    'desc' => 'Nenhum domínio de e-mail disponível. Usando Regra Padrão (Fallback).'
                 ];
             }
             
@@ -232,7 +232,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'source' => 'Plugin',
                 'icon' => '🎯',
                 'desc' => sprintf(
-                    'Perfil: <strong>%s</strong> (ID: %d) | Entidade: <strong>%s</strong> (ID: %d)',
+                    'Perfil: %s (ID: %d) | Entidade: %s (ID: %d)',
                     htmlspecialchars($pluginProfileName), $profile_id,
                     htmlspecialchars($pluginEntityName), $entity_id
                 )
@@ -248,7 +248,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'source' => 'GLPI Core',
                 'icon' => '🏗️',
                 'desc' => sprintf(
-                    'O GLPI core cria o registro do usuário "<strong>%s</strong>" na tabela <code>glpi_users</code>. O plugin <strong>NÃO</strong> envia <code>_profiles_id</code> no input (removido por design).',
+                    'O GLPI core cria o registro do usuário "%s" na tabela glpi_users. O plugin NÃO envia _profiles_id no input (removido por design).',
                     htmlspecialchars($login)
                 )
             ];
@@ -258,7 +258,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'step' => 'User::post_addItem() → applyRightRules()',
                 'source' => 'GLPI Core',
                 'icon' => '⚡',
-                'desc' => 'O core executa <code>applyRightRules()</code>. Como não há <code>_ldap_rules</code> no input (não é LDAP), retorna <strong>false</strong>. O bloco de "Add default profile" será executado.'
+                'desc' => 'O core executa applyRightRules(). Como não há _ldap_rules no input (não é LDAP), retorna false. O bloco de "Add default profile" será executado.'
             ];
             
             // Busca o perfil padrão global do GLPI
@@ -280,7 +280,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'source' => 'GLPI Core',
                 'icon' => '🏷️',
                 'desc' => sprintf(
-                    'Sem <code>_profiles_id</code> no input, o core chama <code>Profile::getDefault()</code>, que busca o perfil com <code>is_default=1</code> na tabela <code>glpi_profiles</code>. Resultado: <strong>%s</strong> (ID: %d). Este perfil é criado como <strong>dinâmico</strong> (<code>is_dynamic=1</code>).',
+                    'Sem _profiles_id no input, o core chama Profile::getDefault(), que busca o perfil com is_default=1 na tabela glpi_profiles. Resultado: %s (ID: %d). Este perfil é criado como dinâmico (is_dynamic=1).',
                     htmlspecialchars($glpiDefaultProfileName), $glpiDefaultProfileId
                 )
             ];
@@ -291,7 +291,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'source' => 'GLPI Core',
                     'icon' => '📝',
                     'desc' => sprintf(
-                        'O core cria um registro em <code>glpi_profiles_users</code> vinculando o novo usuário ao perfil <strong>%s</strong>. Este perfil é marcado como <code>is_default_profile=1</code>.',
+                        'O core cria um registro em glpi_profiles_users vinculando o novo usuário ao perfil %s. Este perfil é marcado como is_default_profile=1.',
                         htmlspecialchars($glpiDefaultProfileName)
                     )
                 ];
@@ -302,7 +302,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                 'step' => 'User::add() retorna → Plugin retoma controle',
                 'source' => 'Plugin',
                 'icon' => '🔄',
-                'desc' => 'O <code>User::add()</code> terminou. O plugin agora executa a limpeza de perfis.'
+                'desc' => 'O User::add() terminou. O plugin agora executa a limpeza de perfis.'
             ];
             
             if ($profile_id > 0) {
@@ -313,7 +313,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                         'source' => 'Plugin',
                         'icon' => '🧹',
                         'desc' => sprintf(
-                            'O plugin <strong>REMOVE</strong> o perfil <strong>%s</strong> (ID: %d) que o GLPI core atribuiu automaticamente. Todos os registros em <code>glpi_profiles_users</code> para este usuário são apagados.',
+                            'O plugin REMOVE o perfil %s (ID: %d) que o GLPI core atribuiu automaticamente. Todos os registros em glpi_profiles_users para este usuário são apagados.',
                             htmlspecialchars($glpiDefaultProfileName), $glpiDefaultProfileId
                         )
                     ];
@@ -323,7 +323,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                         'source' => 'Plugin',
                         'icon' => '🧹',
                         'desc' => sprintf(
-                            'O perfil padrão do GLPI (<strong>%s</strong>) coincide com o perfil do plugin. O plugin ainda assim remove e recria para garantir que a entidade e recursividade estejam corretas.',
+                            'O perfil padrão do GLPI (%s) coincide com o perfil do plugin. O plugin ainda assim remove e recria para garantir que a entidade e recursividade estejam corretas.',
                             htmlspecialchars($glpiDefaultProfileName)
                         )
                     ];
@@ -335,7 +335,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'source' => 'Plugin',
                     'icon' => '✅',
                     'desc' => sprintf(
-                        'O plugin cria o registro definitivo em <code>glpi_profiles_users</code>: Perfil = <strong>%s</strong> (ID: %d), Entidade = <strong>%s</strong> (ID: %d), Recursivo = <strong>Sim</strong>.',
+                        'O plugin cria o registro definitivo em glpi_profiles_users: Perfil = %s (ID: %d), Entidade = %s (ID: %d), Recursivo = Sim.',
                         htmlspecialchars($pluginProfileName), $profile_id,
                         htmlspecialchars($pluginEntityName), $entity_id
                     )
@@ -360,7 +360,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'source' => 'Plugin',
                     'icon' => '⚠️',
                     'desc' => sprintf(
-                        'Nenhum perfil válido (ID > 0) encontrado nas regras do plugin. O perfil <strong>%s</strong> atribuído pelo GLPI core será mantido.',
+                        'Nenhum perfil válido (ID > 0) encontrado nas regras do plugin. O perfil %s atribuído pelo GLPI core será mantido.',
                         htmlspecialchars($glpiDefaultProfileName)
                     )
                 ];
@@ -380,7 +380,7 @@ if ($isPost && ($cpf !== '' || $email !== '')) {
                     'step' => 'Session::init() — Login Efetivado',
                     'source' => 'GLPI Core',
                     'icon' => '🔐',
-                    'desc' => 'O plugin chama <code>Session::init()</code> com o objeto <code>Auth</code> configurado. O GLPI core carrega os perfis do usuário a partir de <code>glpi_profiles_users</code> e inicia a sessão. O usuário é redirecionado para o painel.'
+                    'desc' => 'O plugin chama Session::init() com o objeto Auth configurado. O GLPI core carrega os perfis do usuário a partir de glpi_profiles_users e inicia a sessão. O usuário é redirecionado para o painel.'
                 ];
             }
         }

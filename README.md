@@ -82,6 +82,8 @@ Os scripts do fluxo (`redirect.php`, `callback.php`, `logout.php`) têm execuç�
 
 Ao integrar este plugin, o órgão torna-se responsável pelo tratamento dos dados recebidos do MGI (Lei 13.709/2018): publique Aviso de Privacidade em seu portal GLPI e mantenha canais abertos para o atendimento de solicitações de privacidade.
 
+**Nota sobre Retenção de Dados e Logs (Diagnóstico):** O plugin grava as *claims* de identidade dos usuários (incluindo CPF, nome e e-mails de forma parcial ou total) nos arquivos de log estáticos do GLPI (`files/_log/govbrsso.log`) com o propósito exclusivo de diagnóstico e rastreabilidade técnica. O GLPI nativamente não aplica uma política automática de rotação e exclusão (expurgo) sobre plugins de terceiros. Portanto, recomenda-se configurar rotinas automatizadas no servidor (ex: *logrotate* ou tarefas programadas) para expurgar periodicamente estes logs e não reter dados pessoais sensíveis indefinidamente, garantindo conformidade com a LGPD.
+
 ## Licença
 
 GPLv3+
