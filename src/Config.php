@@ -36,6 +36,9 @@ final class Config
         'default_profile_id' => '0',
         'default_entity_id'  => '0',
         'domain_rules'       => '[]',
+        'ext_api_url'        => '',
+        'ext_api_key'        => '',
+        'ext_api_active'     => '0',
     ];
 
     /** @return array<string,string> */
@@ -80,8 +83,7 @@ final class Config
 
         foreach ($allowed as $key) {
             if (!array_key_exists($key, $input)) {
-                // O HTML não envia checkboxes desmarcadas no POST
-                if (in_array($key, ['auto_create', 'is_active'], true)) {
+                if (in_array($key, ['auto_create', 'is_active', 'ext_api_active'], true)) {
                     $value = '0';
                 } else {
                     continue;

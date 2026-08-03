@@ -1,0 +1,120 @@
+<style>
+.email-card {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+.email-card:hover {
+    border-color: #3b82f6;
+    background-color: #f8fafc;
+}
+.email-card.selected {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+}
+.email-card-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.email-info {
+    flex-grow: 1;
+}
+.email-address {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+.email-type {
+    font-size: 0.9rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+.email-radio {
+    width: 20px;
+    height: 20px;
+    margin-left: 15px;
+}
+</style>
+
+<div class="card col-12 col-md-8 col-lg-6 mx-auto my-5 shadow-sm">
+    <div class="card-header bg-primary text-white py-3">
+        <h3 class="card-title m-0 text-center"><i class="fas fa-users me-2"></i> {{ __('Múltiplos Vínculos Encontrados', 'govbrsso') }}</h3>
+    </div>
+    <div class="card-body p-4">
+        <p class="text-center mb-4 text-muted">
+            {{ __('Identificamos que você possui mais de um e-mail institucional atrelado ao seu CPF.', 'govbrsso') }}<br>
+            <strong>{{ __('Selecione qual vínculo deseja utilizar para acessar o sistema:', 'govbrsso') }}</strong>
+        </p>
+
+        <form method="post" action="{{ formAction }}" id="select-email-form">
+            <input type="hidden" name="_glpi_csrf_token" value="{{ csrf }}">
+
+            <div class="email-options-container">
+                {% for item in emails %}
+                    <label class="email-card w-100 d-block">
+                        <div class="email-card-content">
+                            <div class="email-info">
+                                <div class="email-address">{{ item.email }}</div>
+                                <div class="email-type">
+                                    {% if item.tipoVinculo == 'aluno' %}
+                                        <span class="badge bg-info text-dark"><i class="fas fa-user-graduate me-1"></i> Aluno</span>
+                                    {% elseif item.tipoVinculo == 'tecnico administrativo educacional' %}
+                                        <span class="badge bg-secondary"><i class="fas fa-user-tie me-1"></i> Técnico Administrativo</span>
+                                    {% elseif item.tipoVinculo == 'professor' %}
+                                        <span class="badge bg-success"><i class="fas fa-chalkboard-teacher me-1"></i> Professor</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark border"><i class="fas fa-user me-1"></i> Externo</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <input type="radio" name="selected_email" value="{{ item.email }}" class="email-radio form-check-input" required>
+                        </div>
+                    </label>
+                {% endfor %}
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg" id="btn-submit" disabled>
+                    {{ __('Continuar com o vínculo selecionado', 'govbrsso') }} <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.email-card');
+    const radios = document.querySelectorAll('.email-radio');
+    const btnSubmit = document.getElementById('btn-submit');
+
+    cards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all
+            cards.forEach(c => c.classList.remove('selected'));
+            // Add to current
+            this.classList.add('selected');
+            // Enable button
+            btnSubmit.disabled = false;
+        });
+    });
+    
+    radios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                cards.forEach(c => c.classList.remove('selected'));
+                this.closest('.email-card').classList.add('selected');
+                btnSubmit.disabled = false;
+            }
+        });
+    });
+});
+</script>

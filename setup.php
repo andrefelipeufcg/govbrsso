@@ -44,6 +44,11 @@ function plugin_govbrsso_boot(): void
         '#^/front/logout\\.php$#',
         Firewall::STRATEGY_NO_CHECK,
     );
+    Firewall::addPluginStrategyForLegacyScripts(
+        'govbrsso',
+        '#^/front/email\\.php$#',
+        Firewall::STRATEGY_NO_CHECK,
+    );
 }
 
 /**

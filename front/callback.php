@@ -132,6 +132,41 @@ Toolbox::logInFile(
     "[CLAIMS] CPF=$cpfLog | " . json_encode($claimsSafe, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n"
 );
 
+// Integração com API Externa para múltiplos e-mails
+$extApiActive = Config::get('ext_api_active', '0') === '1';
+$extApiUrl = trim((string) Config::get('ext_api_url', ''));
+$extApiKey = trim((string) Config::get('ext_api_key', ''));
+
+if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 'email') {
+    $cpfToQuery = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';
+    if ($cpfToQuery !== '') {
+        $ch = curl_init();
+        $url = rtrim($extApiUrl, '/') . '/' . $cpfToQuery;
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        if ($extApiKey !== '') {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Glpi-Api-Key: ' . $extApiKey]);
+        }
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode === 200 && $response) {
+            $extApiEmails = json_decode($response, true);
+            if (is_array($extApiEmails) && count($extApiEmails) > 0) {
+                if (count($extApiEmails) > 1) {
+                    $_SESSION['govbrsso_pending_claims'] = $claims;
+                    $_SESSION['govbrsso_ext_api_emails'] = $extApiEmails;
+                    Html::redirect($CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/email.php');
+                } else {
+                    $claims['email'] = $extApiEmails[0]['email'];
+                    $claims['email_verified'] = true;
+                }
+            }
+        }
+    }
+}
+
 // Efetua o login no GLPI.
 $result = UserManager::loginFromClaims($claims);
 
