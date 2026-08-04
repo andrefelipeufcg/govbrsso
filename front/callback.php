@@ -144,16 +144,42 @@ if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 
         $url = rtrim($extApiUrl, '/') . '/' . $cpfToQuery;
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); // Força IPv4 para evitar timeouts de IPv6 quebrado
         if ($extApiKey !== '') {
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Glpi-Api-Key: ' . $extApiKey]);
         }
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        $totalTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
         curl_close($ch);
+        
+        Toolbox::logInFile('govbrsso', "[EXT_API] URL=$url | HTTP=$httpCode | Time={$totalTime}s | Error=$error | Resp=" . substr((string)$response, 0, 200) . "\n");
         
         if ($httpCode === 200 && $response) {
             $extApiEmails = json_decode($response, true);
             if (is_array($extApiEmails) && count($extApiEmails) > 0) {
+                // Verifica se o e-mail do Gov.br já não veio na API institucional
+                $govbrEmail = isset($claims['email']) ? trim((string)$claims['email']) : '';
+                $alreadyExists = false;
+                foreach ($extApiEmails as $e) {
+                    if (strcasecmp($e['email'], $govbrEmail) === 0) {
+                        $alreadyExists = true;
+                        break;
+                    }
+                }
+                
+                // Adiciona o e-mail pessoal (Gov.br) como uma opção extra, se for diferente
+                if ($govbrEmail !== '' && !$alreadyExists) {
+                    $extApiEmails[] = [
+                        'email' => $govbrEmail,
+                        'tipoVinculo' => 'Pessoal (Gov.br)',
+                        'ativo' => true
+                    ];
+                }
+                
                 if (count($extApiEmails) > 1) {
                     $_SESSION['govbrsso_pending_claims'] = $claims;
                     $_SESSION['govbrsso_ext_api_emails'] = $extApiEmails;
@@ -163,6 +189,8 @@ if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 
                     $claims['email_verified'] = true;
                 }
             }
+        } else {
+            Toolbox::logInFile('govbrsso', "[EXT_API] FALHA na consulta. Seguindo com e-mail do Gov.br.\n");
         }
     }
 }
