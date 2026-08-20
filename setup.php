@@ -36,6 +36,11 @@ function plugin_govbrsso_boot(): void
     );
     Firewall::addPluginStrategyForLegacyScripts(
         'govbrsso',
+        '#^/front/callback_client\\.php$#',
+        Firewall::STRATEGY_NO_CHECK,
+    );
+    Firewall::addPluginStrategyForLegacyScripts(
+        'govbrsso',
         '#^/front/consent\\.php$#',
         Firewall::STRATEGY_NO_CHECK,
     );
