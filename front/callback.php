@@ -184,150 +184,16 @@ if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 
                     $_SESSION['govbrsso_pending_claims'] = $claims;
                     $_SESSION['govbrsso_ext_api_emails'] = $extApiEmails;
                     Html::redirect($CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/email.php');
+                    die();
                 } else {
                     $claims['email'] = $extApiEmails[0]['email'];
                     $claims['email_verified'] = true;
                 }
             }
         } else {
-            Toolbox::logInFile('govbrsso', "[EXT_API] FALHA na consulta (Server-Side). Iniciando fallback Client-Side...\n");
-            
-            $t = time();
-            $apiKeyHash = hash('sha256', $extApiKey);
-            $dataToSign = $cpfToQuery . $t;
-            $signature = hash_hmac('sha256', $dataToSign, $apiKeyHash);
-            
-            $jsUrl = rtrim($extApiUrl, '/') . '/' . $cpfToQuery . '?t=' . $t . '&s=' . $signature;
-            
-            // Gera um token único para validar o redirect do client-side
-            $csToken = bin2hex(random_bytes(16));
-            $_SESSION['govbrsso_pending_claims'] = $claims;
-            $_SESSION['govbrsso_cs_token'] = $csToken;
-            
-            $clientUrl = $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/callback_client.php';
-            $loginUrl = $CFG_GLPI['root_doc'] . '/index.php?noAUTO=1';
-            
-            echo <<<HTML
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Autenticando - Gov.br</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f6fa; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-  .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,.08); padding: 48px 40px; max-width: 440px; width: 90%; text-align: center; }
-  .spinner { width: 48px; height: 48px; border: 4px solid #e0e0e0; border-top-color: #1351b4; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 24px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  h2 { color: #1351b4; font-size: 20px; margin-bottom: 8px; }
-  .status { color: #555; font-size: 14px; margin-bottom: 20px; }
-  .progress-wrap { background: #e9ecef; border-radius: 8px; height: 6px; overflow: hidden; margin-bottom: 12px; }
-  .progress-bar { height: 100%; background: linear-gradient(90deg, #1351b4, #2670d8); border-radius: 8px; width: 0%; transition: width .3s ease; }
-  .timer { color: #888; font-size: 12px; margin-bottom: 4px; }
-  .error-box { display: none; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 16px; margin-top: 20px; text-align: left; }
-  .error-box h3 { color: #b91c1c; font-size: 15px; margin-bottom: 6px; }
-  .error-box p { color: #7f1d1d; font-size: 13px; word-break: break-word; }
-  .error-box .detail { color: #999; font-size: 11px; margin-top: 8px; font-family: monospace; }
-  .btn { display: inline-block; margin-top: 16px; padding: 10px 28px; background: #1351b4; color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; }
-  .btn:hover { background: #0c3d8a; }
-  .btn-outline { background: transparent; color: #1351b4; border: 1px solid #1351b4; margin-left: 8px; }
-  .btn-outline:hover { background: #f0f4ff; }
-  .hidden { display: none; }
-</style>
-</head>
-<body>
-<div class="card">
-  <div id="loading-section">
-    <div class="spinner" id="spinner"></div>
-    <h2>Autenticando com o Gov.br</h2>
-    <p class="status" id="status-text">Buscando seus vínculos institucionais...</p>
-    <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
-    <p class="timer" id="timer-text"></p>
-  </div>
-  <div class="error-box" id="error-box">
-    <h3>⚠ Não foi possível buscar seus vínculos</h3>
-    <p id="error-msg">Ocorreu um erro na comunicação com o servidor.</p>
-    <p class="detail" id="error-detail"></p>
-  </div>
-  <div id="actions" class="hidden">
-    <a class="btn" id="btn-continue" href="$clientUrl?t=$csToken">Continuar sem vínculos</a>
-    <a class="btn btn-outline" href="$loginUrl">Voltar ao Login</a>
-  </div>
-</div>
-<script>
-(function() {
-  var TIMEOUT = 5;
-  var elapsed = 0;
-  var bar = document.getElementById('progress-bar');
-  var timerEl = document.getElementById('timer-text');
-  var statusEl = document.getElementById('status-text');
-  var done = false;
-
-  var ticker = setInterval(function() {
-    if (done) return;
-    elapsed++;
-    var pct = Math.min((elapsed / TIMEOUT) * 100, 100);
-    bar.style.width = pct + '%';
-    var remaining = Math.max(TIMEOUT - elapsed, 0);
-    timerEl.textContent = remaining > 0 ? 'Aguardando... ' + remaining + 's' : '';
-  }, 1000);
-
-  function showError(msg, detail) {
-    done = true;
-    clearInterval(ticker);
-    document.getElementById('spinner').style.display = 'none';
-    statusEl.textContent = 'A requisição falhou.';
-    bar.style.width = '100%';
-    bar.style.background = '#f87171';
-    timerEl.textContent = '';
-    document.getElementById('error-box').style.display = 'block';
-    document.getElementById('error-msg').textContent = msg;
-    if (detail) document.getElementById('error-detail').textContent = detail;
-    document.getElementById('actions').classList.remove('hidden');
-  }
-
-  function redirect(emailsJson) {
-    done = true;
-    clearInterval(ticker);
-    bar.style.width = '100%';
-    statusEl.textContent = 'Redirecionando...';
-    var url = '$clientUrl?t=$csToken';
-    if (emailsJson) url += '&emails=' + encodeURIComponent(emailsJson);
-    window.location.href = url;
-  }
-
-  var controller = new AbortController();
-  setTimeout(function() { controller.abort(); }, TIMEOUT * 1000);
-
-  fetch('$jsUrl', { signal: controller.signal })
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(function(data) {
-      redirect(JSON.stringify(data));
-    })
-    .catch(function(e) {
-      var msg, detail;
-      if (e.name === 'AbortError') {
-        msg = 'A requisição excedeu o tempo limite de ' + TIMEOUT + ' segundos.';
-        detail = 'O servidor de vínculos pode estar indisponível ou há um bloqueio de rede.';
-      } else if (e.message && (e.message.indexOf('Failed to fetch') !== -1 || e.message.indexOf('Mixed Content') !== -1 || e.message.indexOf('Network') !== -1)) {
-        msg = 'Bloqueio de segurança do navegador (Mixed Content).';
-        detail = 'O navegador bloqueou a requisição HTTP a partir de uma página HTTPS. É necessário que o servidor PSI suporte HTTPS ou que a comunicação seja liberada pela infra.';
-      } else {
-        msg = 'Erro ao buscar vínculos: ' + (e.message || String(e));
-        detail = 'URL: $jsUrl';
-      }
-      console.error('govbrsso client-side fetch error:', e);
-      showError(msg, detail);
-    });
-})();
-</script>
-</body>
-</html>
-HTML;
-            die();
+            Toolbox::logInFile('govbrsso', "[EXT_API] FALHA na consulta (Server-Side). HTTP=$httpCode. Ignorando e-mails institucionais.\n");
+            // Como falhou, não temos os vínculos. O fluxo continuará usando o e-mail base do Gov.br (se existir)
+            // ou será barrado pelas regras de criação de usuário se não houver e-mail.
         }
     }
 }

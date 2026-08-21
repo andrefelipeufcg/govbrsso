@@ -62,21 +62,23 @@
                 {% for item in emails %}
                     <label class="email-card w-100 d-block">
                         <div class="email-card-content">
+                            <input type="radio" name="selected_email" value="{{ item.email }}" class="email-radio form-check-input me-3" style="margin-left: 0; margin-right: 15px;" required>
                             <div class="email-info">
                                 <div class="email-address">{{ item.email }}</div>
                                 <div class="email-type mt-1">
                                     {% if item.tipoVinculo == 'aluno' %}
                                         <span class="badge bg-blue-lt"><i class="fas fa-user-graduate me-1"></i> Aluno</span>
-                                    {% elseif item.tipoVinculo == 'tecnico administrativo educacional' %}
+                                    {% elseif item.tipoVinculo == 'tecnico administrativo educacional' or item.tipoVinculo == 'tecnico' %}
                                         <span class="badge bg-purple-lt"><i class="fas fa-user-tie me-1"></i> Técnico Administrativo</span>
                                     {% elseif item.tipoVinculo == 'professor' %}
                                         <span class="badge bg-green-lt"><i class="fas fa-chalkboard-teacher me-1"></i> Professor</span>
-                                    {% else %}
+                                    {% elseif item.tipoVinculo == 'Pessoal (Gov.br)' %}
                                         <span class="badge bg-secondary-lt"><i class="fas fa-user me-1"></i> Pessoal (Gov.br)</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-lt"><i class="fas fa-briefcase me-1"></i> {{ item.tipoVinculo|capitalize }}</span>
                                     {% endif %}
                                 </div>
                             </div>
-                            <input type="radio" name="selected_email" value="{{ item.email }}" class="email-radio form-check-input" required>
                         </div>
                     </label>
                 {% endfor %}
