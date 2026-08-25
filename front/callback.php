@@ -135,7 +135,7 @@ Toolbox::logInFile(
 // Integração com API Externa para múltiplos e-mails
 $extApiActive = Config::get('ext_api_active', '0') === '1';
 $extApiUrl = trim((string) Config::get('ext_api_url', ''));
-$extApiKey = trim((string) Config::get('ext_api_key', ''));
+$extApiKey = trim(Config::getExtApiKey());
 
 if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 'email') {
     $cpfToQuery = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';

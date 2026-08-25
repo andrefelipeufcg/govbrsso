@@ -11,7 +11,7 @@ use Glpi\Http\Firewall;
 use Glpi\Plugin\Hooks;
 use GlpiPlugin\Govbrsso\Config;
 
-define('PLUGIN_GOVBRSSO_VERSION', '1.1.0');
+define('PLUGIN_GOVBRSSO_VERSION', '1.1.1');
 
 // Versão mínima (inclusiva) e máxima (exclusiva) do GLPI suportada.
 define('PLUGIN_GOVBRSSO_MIN_GLPI', '11.0.0');
@@ -146,7 +146,7 @@ function plugin_govbrsso_display_login(): void
  */
 function plugin_govbrsso_undisclosed_config_value(array $fields): array
 {
-    if (($fields['context'] ?? '') === Config::CONTEXT && ($fields['name'] ?? '') === 'client_secret') {
+    if (($fields['context'] ?? '') === Config::CONTEXT && in_array(($fields['name'] ?? ''), ['client_secret', 'ext_api_key'], true)) {
         unset($fields['value']);
     }
     return $fields;

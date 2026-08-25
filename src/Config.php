@@ -63,9 +63,32 @@ final class Config
         }
         if (class_exists(GLPIKey::class)) {
             try {
-                return (string) (new GLPIKey())->decrypt($enc);
+                $decrypted = (new GLPIKey())->decrypt($enc);
+                if ($decrypted !== false && $decrypted !== null && $decrypted !== '') {
+                    return (string) $decrypted;
+                }
             } catch (\Throwable) {
-                return $enc;
+                // fall through
+            }
+        }
+        return $enc;
+    }
+
+    /** ext_api_key decifrada (vazia se não definida). */
+    public static function getExtApiKey(): string
+    {
+        $enc = (string) self::get('ext_api_key', '');
+        if ($enc === '') {
+            return '';
+        }
+        if (class_exists(GLPIKey::class)) {
+            try {
+                $decrypted = (new GLPIKey())->decrypt($enc);
+                if ($decrypted !== false && $decrypted !== null && $decrypted !== '') {
+                    return (string) $decrypted;
+                }
+            } catch (\Throwable) {
+                // fall through
             }
         }
         return $enc;
@@ -92,7 +115,7 @@ final class Config
                 $value = trim((string) $input[$key]);
             }
 
-            if ($key === 'client_secret') {
+            if ($key === 'client_secret' || $key === 'ext_api_key') {
                 if ($value === '') {
                     continue; // não sobrescreve o secret existente com vazio
                 }
