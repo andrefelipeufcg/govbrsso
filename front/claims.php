@@ -179,12 +179,12 @@ if (!empty($entries)) {
         }
 
         foreach ($orderedClaims as $key => $value) {
-            $keySafe = htmlspecialchars((string)$key);
+            $keySafe = htmlspecialchars((string)$key, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             if (is_array($value)) {
-                $valSafe = htmlspecialchars(json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                $valSafe = htmlspecialchars(json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 $valHtml = "<pre style='margin:0; font-size: 12px; white-space: pre-wrap; color: inherit;'>{$valSafe}</pre>";
             } else {
-                $valSafe = htmlspecialchars((string)$value);
+                $valSafe = htmlspecialchars((string)$value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 $valHtml = $valSafe;
             }
 

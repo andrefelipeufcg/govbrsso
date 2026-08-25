@@ -90,8 +90,9 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Chave de API (Glpi-Api-Key)</label>
-                    <input type="password" name="ext_api_key" class="form-control" value="{{ c['ext_api_key'] }}">
+                    <label class="form-label">{{ __('Chave de API (Header Glpi-Api-Key)', 'govbrsso') }}</label>
+                    <input type="password" name="ext_api_key" class="form-control" value="">
+                    <small class="form-text text-muted">{{ __('Deixe em branco para manter a chave atual (ela fica armazenada de forma encriptada).', 'govbrsso') }}</small>
                 </div>
             </div>
 

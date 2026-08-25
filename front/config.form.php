@@ -25,7 +25,10 @@ if (isset($_POST['save_config'])) {
     // inválido, o core já teria abortado antes de chegar aqui.
     // Portanto, se este código está executando, o CSRF foi validado com sucesso.
     $adminName = $_SESSION['glpiname'] ?? 'Desconhecido';
-    Toolbox::logInFile('govbrsso', "[ADMIN] Configurações do plugin govbrsso alteradas pelo usuário {$adminName} com os seguintes dados:\n" . print_r($_POST, true) . "\n");
+    $logData = $_POST;
+    if (isset($logData['client_secret'])) $logData['client_secret'] = '********';
+    if (isset($logData['ext_api_key'])) $logData['ext_api_key'] = '********';
+    Toolbox::logInFile('govbrsso', "[ADMIN] Configurações do plugin govbrsso alteradas pelo usuário {$adminName} com os seguintes dados:\n" . print_r($logData, true) . "\n");
 
     if (isset($_POST['auto_create']) && $_POST['auto_create'] === '1') {
         $defProf = (int)($_POST['default_profile_id'] ?? 0);
