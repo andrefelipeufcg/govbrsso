@@ -3,15 +3,17 @@
 /**
  * Simulador de Regras de Criação de Conta do Gov.br SSO
  *
- * Simula o fluxo completo incluindo o comportamento do core do GLPI 11.0.7
+ * Simula o fluxo completo incluindo o comportamento do core do GLPI
  * (User::post_addItem, Profile::getDefault, etc.) para demonstrar exatamente
  * o que aconteceria em um login real.
  *
  * @license GPLv3+
  */
 
-include_once '../../../inc/includes.php';
-
+$inc = __DIR__ . '/../../../inc/includes.php';
+if (!file_exists($inc)) { $inc = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/inc/includes.php'; }
+if (!file_exists($inc)) { $inc = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/../inc/includes.php'; }
+include $inc;
 use GlpiPlugin\Govbrsso\Config;
 use Glpi\Application\View\TemplateRenderer;
 

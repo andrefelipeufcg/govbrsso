@@ -28,10 +28,10 @@
     </div>
 
     <form id="debug-form" method="get" action="{{ selfUrl }}" style="display: flex; gap: 10px; margin-bottom: 25px; align-items: center;">
-        <label for="cpf" style="font-weight: 600; color: #333; white-space: nowrap;">{{ __('Buscar por CPF:', 'govbrsso') }}</label>
+        <label for="cpf" style="font-weight: 600; color: inherit; white-space: nowrap;">{{ __('Buscar por CPF:', 'govbrsso') }}</label>
         <input type="text" id="cpf" name="cpf" value="{{ filterCpfSafe }}" placeholder="000.000.000-00" 
                maxlength="14" inputmode="numeric"
-               style="flex: 1; max-width: 300px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: monospace;">
+               style="flex: 1; max-width: 300px; padding: 8px 12px; border: 1px solid rgba(128,128,128,0.4); border-radius: 4px; font-size: 14px; font-family: monospace; background: inherit; color: inherit;">
         <button type="submit" id="btn-buscar" style="padding: 8px 20px; background: #1351b4; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
             {{ __('Buscar', 'govbrsso') }}
         </button>
@@ -85,26 +85,27 @@
     })();
     </script>
 
-{% if filterCpf == '' %}
-    <div style="text-align: center; padding: 60px 20px; color: #999;"><span style="font-size: 48px; display: block; margin-bottom: 15px;">🔎</span><p style="font-size: 15px; margin: 0;">{{ __('Digite um CPF acima para consultar os dados recebidos do Gov.br.', 'govbrsso') }}</p></div>
+{% if filterCpf is empty %}
+    <div style='text-align: center; padding: 60px; color: inherit; opacity: 0.7; font-size: 14px;'>
+        <div style='font-size: 40px; margin-bottom: 10px;'>🔎</div><p style="font-size: 15px; margin: 0;">{{ __('Digite um CPF acima para consultar os dados recebidos do Gov.br.', 'govbrsso') }}</p></div>
 {% elseif entries is empty %}
-    <div style='text-align: center; padding: 40px; color: #888;'>{{ __('Nenhum registro encontrado para o CPF', 'govbrsso') }} <strong>{{ filterCpfSafe }}</strong>.</div>
+    <div style='text-align: center; padding: 40px; color: inherit; opacity: 0.8;'>{{ __('Nenhum registro encontrado para o CPF', 'govbrsso') }} <strong>{{ filterCpfSafe }}</strong>.</div>
 {% else %}
-    <p style='color: #666; font-size: 13px; margin-bottom: 15px;'><strong>{{ total }}</strong> {{ __('registro(s) encontrado(s) (mais recentes primeiro):', 'govbrsso') }}</p>
+    <p style='color: inherit; opacity: 0.8; font-size: 13px; margin-bottom: 15px;'><strong>{{ total }}</strong> {{ __('registro(s) encontrado(s) (mais recentes primeiro):', 'govbrsso') }}</p>
 
     {% for entry in entries %}
-        <details style="margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden;">
-            <summary style="padding: 12px 16px; background: #f8f9fa; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 12px;">
+        <details style="margin-bottom: 10px; border: 1px solid rgba(128,128,128,0.3); border-radius: 6px; overflow: hidden;">
+            <summary style="padding: 12px 16px; background: rgba(0,0,0,0.05); cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 12px;">
                 <span style="background: {{ entry.lvlColor }}; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">{{ entry.authTimeStr }}</span>
                 <span style="font-weight: 600;">CPF: {{ entry.cpfFormatted }}</span>
-                <span style="color: #888; font-size: 12px;">({{ entry.nome }})</span>
+                <span style="color: inherit; opacity: 0.6; font-size: 12px;">({{ entry.nome }})</span>
             </summary>
             <div style="padding: 12px;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: inherit;">
                     <thead>
-                        <tr style="background: #f1f3f5;">
-                            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #dee2e6; width: 200px;">Claim</th>
-                            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #dee2e6;">{{ __('Valor', 'govbrsso') }}</th>
+                        <tr style="background: rgba(0,0,0,0.05);">
+                            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid rgba(128,128,128,0.3); width: 200px;">Claim</th>
+                            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid rgba(128,128,128,0.3);">{{ __('Valor', 'govbrsso') }}</th>
                         </tr>
                     </thead>
                     <tbody>

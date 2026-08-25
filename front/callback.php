@@ -132,6 +132,72 @@ Toolbox::logInFile(
     "[CLAIMS] CPF=$cpfLog | " . json_encode($claimsSafe, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n"
 );
 
+// Integração com API Externa para múltiplos e-mails
+$extApiActive = Config::get('ext_api_active', '0') === '1';
+$extApiUrl = trim((string) Config::get('ext_api_url', ''));
+$extApiKey = trim((string) Config::get('ext_api_key', ''));
+
+if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 'email') {
+    $cpfToQuery = isset($claims['sub']) ? preg_replace('/\D+/', '', (string) $claims['sub']) : '';
+    if ($cpfToQuery !== '') {
+        $ch = curl_init();
+        $url = rtrim($extApiUrl, '/') . '/' . $cpfToQuery;
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); // Força IPv4 para evitar timeouts de IPv6 quebrado
+        if ($extApiKey !== '') {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Glpi-Api-Key: ' . $extApiKey]);
+        }
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        $totalTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
+        curl_close($ch);
+        
+        Toolbox::logInFile('govbrsso', "[EXT_API] URL=$url | HTTP=$httpCode | Time={$totalTime}s | Error=$error | Resp=" . substr((string)$response, 0, 200) . "\n");
+        
+        if ($httpCode === 200 && $response) {
+            $extApiEmails = json_decode($response, true);
+            if (is_array($extApiEmails) && count($extApiEmails) > 0) {
+                // Verifica se o e-mail do Gov.br já não veio na API institucional
+                $govbrEmail = isset($claims['email']) ? trim((string)$claims['email']) : '';
+                $alreadyExists = false;
+                foreach ($extApiEmails as $e) {
+                    if (strcasecmp($e['email'], $govbrEmail) === 0) {
+                        $alreadyExists = true;
+                        break;
+                    }
+                }
+                
+                // Adiciona o e-mail pessoal (Gov.br) como uma opção extra, se for diferente
+                if ($govbrEmail !== '' && !$alreadyExists) {
+                    $extApiEmails[] = [
+                        'email' => $govbrEmail,
+                        'tipoVinculo' => 'Pessoal (Gov.br)',
+                        'ativo' => true
+                    ];
+                }
+                
+                if (count($extApiEmails) > 1) {
+                    $_SESSION['govbrsso_pending_claims'] = $claims;
+                    $_SESSION['govbrsso_ext_api_emails'] = $extApiEmails;
+                    Html::redirect($CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/email.php');
+                    die();
+                } else {
+                    $claims['email'] = $extApiEmails[0]['email'];
+                    $claims['email_verified'] = true;
+                }
+            }
+        } else {
+            Toolbox::logInFile('govbrsso', "[EXT_API] FALHA na consulta (Server-Side). HTTP=$httpCode. Ignorando e-mails institucionais.\n");
+            // Como falhou, não temos os vínculos. O fluxo continuará usando o e-mail base do Gov.br (se existir)
+            // ou será barrado pelas regras de criação de usuário se não houver e-mail.
+        }
+    }
+}
+
 // Efetua o login no GLPI.
 $result = UserManager::loginFromClaims($claims);
 

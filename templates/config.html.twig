@@ -4,27 +4,27 @@
     </div>
     
     <div class="card-body">
-        <div style="background: #eef9fd; border-left: 4px solid #178abb; padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+        <div style="background: rgba(23, 138, 187, 0.1); border-left: 4px solid #178abb; padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px; color: inherit;">
             <h3 style="margin-top: 0; font-size: 1.2rem; color: #178abb;">{{ __('Como habilitar a integração com o gov.br?', 'govbrsso') }}</h3>
             <ol style="line-height: 1.6; margin-bottom: 0; padding-left: 1.2rem;">
-                <li>{{ __('Acesse o', 'govbrsso') }} <a href="https://manual-roteiro-integracao-login-unico.servicos.gov.br/pt/latest/" target="_blank">{{ __('Roteiro de Integração do gov.br', 'govbrsso') }}</a> {{ __('e inicie o processo de solicitação de uso para o seu órgão/entidade.', 'govbrsso') }}</li>
+                <li>{{ __('Acesse o', 'govbrsso') }} <a href="https://manual-roteiro-integracao-login-unico.servicos.gov.br/pt/latest/" target="_blank" style="color: #178abb;">{{ __('Roteiro de Integração do gov.br', 'govbrsso') }}</a> {{ __('e inicie o processo de solicitação de uso para o seu órgão/entidade.', 'govbrsso') }}</li>
                 <li>{{ __('Durante o cadastro do sistema, você precisará informar as URLs de redirecionamento. Copie e cole exatamente as URLs abaixo:', 'govbrsso') }}
                     <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem; list-style-type: disc;">
-                        <li><strong>{{ __('URL de retorno (redirect_uri):', 'govbrsso') }}</strong> <code>{{ callbackUrl }}</code></li>
-                        <li><strong>{{ __('URL de Log Out:', 'govbrsso') }}</strong> <code>{{ logoutUrl }}</code></li>
+                        <li><strong>{{ __('URL de retorno (redirect_uri):', 'govbrsso') }}</strong> <code style="color: inherit; background: rgba(0,0,0,0.15); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold;">{{ callbackUrl }}</code></li>
+                        <li><strong>{{ __('URL de Log Out:', 'govbrsso') }}</strong> <code style="color: inherit; background: rgba(0,0,0,0.15); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold;">{{ logoutUrl }}</code></li>
                     </ul>
                 </li>
                 <li>{{ __('Após a aprovação da integração pelo Ministério da Gestão e da Inovação (MGI), você receberá as credenciais:', 'govbrsso') }} <strong>client_id</strong> {{ __('e', 'govbrsso') }} <strong>client_secret</strong>.</li>
                 <li>{{ __('Preencha os campos do formulário abaixo com suas credenciais.', 'govbrsso') }}</li>
                 <li>{{ __('Configure a', 'govbrsso') }} <strong>{{ __('Provider URL (sso)', 'govbrsso') }}</strong> {{ __('conforme o ambiente:', 'govbrsso') }}
                     <ul style="margin-top: 0.5rem; margin-bottom: 0.5rem; list-style-type: disc;">
-                        <li>{{ __('Homologação:', 'govbrsso') }} <code>https://sso.staging.acesso.gov.br</code></li>
-                        <li>{{ __('Produção:', 'govbrsso') }} <code>https://sso.acesso.gov.br</code></li>
+                        <li>{{ __('Homologação:', 'govbrsso') }} <code style="color: inherit; background: rgba(0,0,0,0.15); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold;">https://sso.staging.acesso.gov.br</code></li>
+                        <li>{{ __('Produção:', 'govbrsso') }} <code style="color: inherit; background: rgba(0,0,0,0.15); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold;">https://sso.acesso.gov.br</code></li>
                     </ul>
                 </li>
                 <li>{{ __('Marque a opção', 'govbrsso') }} <strong>{{ __('Ativar o botão "Entrar com gov.br"', 'govbrsso') }}</strong> {{ __('no final do formulário e clique em Salvar.', 'govbrsso') }}</li>
             </ol>
-            <p style="margin-bottom: 0; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #b8d8ea;">
+            <p style="margin-bottom: 0; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid rgba(184, 216, 234, 0.3);">
                 <strong>💡 {{ __('Diagnóstico:', 'govbrsso') }}</strong> {{ __('Para ver os dados (claims) recebidos do gov.br durante o login de um usuário,', 'govbrsso') }}
                 <a href="{{ root_doc }}/plugins/govbrsso/front/claims.php" style="color: #178abb; font-weight: 600;">{{ __('clique aqui', 'govbrsso') }}</a>.
             </p>
@@ -54,14 +54,6 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">{{ __('Campo de login do GLPI', 'govbrsso') }}</label>
-                <select name="login_field" class="form-select">
-                    <option value="cpf" {% if c['login_field'] == 'cpf' %}selected{% endif %}>{{ __('CPF (sub)', 'govbrsso') }}</option>
-                    <option value="email" {% if c['login_field'] == 'email' %}selected{% endif %}>{{ __('E-mail', 'govbrsso') }}</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
                 <label class="form-label">{{ __('Nível mínimo de confiabilidade', 'govbrsso') }}</label>
                 <select name="min_level" class="form-select">
                     <option value="" {% if c['min_level'] == '' %}selected{% endif %}>{{ __('Qualquer', 'govbrsso') }}</option>
@@ -71,6 +63,40 @@
                 </select>
             </div>
 
+            <div class="mb-3">
+                <label class="form-label">{{ __('Campo de login do GLPI', 'govbrsso') }}</label>
+                <select name="login_field" id="login_field_select" class="form-select">
+                    <option value="cpf" {% if c['login_field'] == 'cpf' %}selected{% endif %}>{{ __('CPF (sub)', 'govbrsso') }}</option>
+                    <option value="email" {% if c['login_field'] == 'email' %}selected{% endif %}>{{ __('E-mail', 'govbrsso') }}</option>
+                </select>
+            </div>
+
+            <hr class="my-4">
+            <div class="mb-3">
+                <label class="form-check form-switch">
+                    <input type="hidden" name="ext_api_active" value="0">
+                    <input class="form-check-input" type="checkbox" name="ext_api_active" id="ext_api_active_chk" value="1" {% if c['ext_api_active'] == '1' %}checked{% endif %}>
+                    <span class="form-check-label">{{ __('Habilitar integração com API Externa', 'govbrsso') }}</span>
+                </label>
+            </div>
+            <div class="alert alert-secondary">
+                Permite consultar uma API externa para descobrir todos os e-mails vinculados ao CPF do usuário e oferecer uma tela de seleção caso haja mais de um.
+            </div>
+
+            <div id="ext_api_fields_section">
+                <div class="mb-3">
+                    <label class="form-label">URL da API Externa</label>
+                    <input type="text" name="ext_api_url" class="form-control" value="{{ c['ext_api_url'] }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Chave de API (Glpi-Api-Key)</label>
+                    <input type="password" name="ext_api_key" class="form-control" value="{{ c['ext_api_key'] }}">
+                </div>
+            </div>
+
+            <hr class="my-4">
+            
             <div class="mb-3">
                 <label class="form-check form-switch">
                     <input type="hidden" name="auto_create" value="0">
@@ -159,6 +185,28 @@
 
 <script>
 $(function() {
+    function toggleExtApiFields() {
+        if ($('#ext_api_active_chk').is(':checked')) {
+            $('#ext_api_fields_section').show();
+        } else {
+            $('#ext_api_fields_section').hide();
+        }
+    }
+    $('#ext_api_active_chk').on('change', function() {
+        toggleExtApiFields();
+        if ($(this).is(':checked')) {
+            $('#login_field_select').val('email');
+        }
+    });
+    toggleExtApiFields();
+
+    $('#login_field_select').on('change', function() {
+        if ($(this).val() === 'cpf') {
+            $('#ext_api_active_chk').prop('checked', false);
+            toggleExtApiFields();
+        }
+    });
+
     function toggleDomainRules() {
         if ($('#auto_create_chk').is(':checked')) {
             $('#domain_rules_section').show();

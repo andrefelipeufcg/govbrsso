@@ -163,7 +163,7 @@ if (!empty($entries)) {
 
         // Monta a tabela de claims
         $accountText = __('conta', 'govbrsso');
-        $claimsRows = "<tr><td style='padding: 6px 12px; border-bottom: 1px solid #eee; font-weight: 700; color: {$lvlColor}; background: #ffffff; white-space: nowrap; vertical-align: top;'>{$accountText}</td><td style='padding: 6px 12px; border-bottom: 1px solid #eee; font-weight: 700; color: {$lvlColor}; background: #ffffff; word-break: break-all;'>{$levelPt}</td></tr>";
+        $claimsRows = "<tr><td style='padding: 6px 12px; border-bottom: 1px solid rgba(128,128,128,0.3); font-weight: 700; color: {$lvlColor}; background: rgba(0,0,0,0.05); white-space: nowrap; vertical-align: top;'>{$accountText}</td><td style='padding: 6px 12px; border-bottom: 1px solid rgba(128,128,128,0.3); font-weight: 700; color: {$lvlColor}; background: rgba(0,0,0,0.05); word-break: break-all;'>{$levelPt}</td></tr>";
 
         $importantKeys = ['sub', 'name', 'social_name', 'email', 'email_verified', 'amr', 'profile', 'kid', 'iss', 'preferred_username', 'nonce', 'aud', 'auth_time', 'scope'];
         $orderedClaims = [];
@@ -182,7 +182,7 @@ if (!empty($entries)) {
             $keySafe = htmlspecialchars((string)$key);
             if (is_array($value)) {
                 $valSafe = htmlspecialchars(json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-                $valHtml = "<pre style='margin:0; font-size: 12px; white-space: pre-wrap;'>{$valSafe}</pre>";
+                $valHtml = "<pre style='margin:0; font-size: 12px; white-space: pre-wrap; color: inherit;'>{$valSafe}</pre>";
             } else {
                 $valSafe = htmlspecialchars((string)$value);
                 $valHtml = $valSafe;
@@ -191,10 +191,10 @@ if (!empty($entries)) {
             // Destaca claims relacionadas a e-mail
             $rowBg = '';
             if (stripos($key, 'email') !== false) {
-                $rowBg = 'background-color: #e8f5e9;';
+                $rowBg = 'background-color: rgba(76, 175, 80, 0.1);';
             }
 
-            $claimsRows .= "<tr style='{$rowBg}'><td style='padding: 6px 12px; border-bottom: 1px solid #eee; font-weight: 600; color: #555; white-space: nowrap; vertical-align: top;'>{$keySafe}</td><td style='padding: 6px 12px; border-bottom: 1px solid #eee; word-break: break-all;'>{$valHtml}</td></tr>";
+            $claimsRows .= "<tr style='{$rowBg}'><td style='padding: 6px 12px; border-bottom: 1px solid rgba(128,128,128,0.3); font-weight: 600; color: inherit; opacity: 0.8; white-space: nowrap; vertical-align: top;'>{$keySafe}</td><td style='padding: 6px 12px; border-bottom: 1px solid rgba(128,128,128,0.3); word-break: break-all;'>{$valHtml}</td></tr>";
         }
 
         $cpfFormatted = strlen($cpf) === 11
