@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -15,6 +16,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Determine version from tag
+        id: version
+        run: echo "tag=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -26,14 +34,41 @@ jobs:
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
         continue-on-error: true
 
-      - name: Determine version from tag
-        id: version
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+      - name: Auto-bump version in files and commit
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          
+          # Update setup.php
+          sed -i "s/define('PLUGIN_GOVBRSSO_VERSION', '.*');/define('PLUGIN_GOVBRSSO_VERSION', '${VERSION}');/" setup.php
+          
+          # Update govbrsso.xml if version doesn't exist
+          if ! grep -q "<num>${VERSION}</num>" govbrsso.xml; then
+            NEW_VERSION_BLOCK="      <version>\n         <num>${VERSION}</num>\n         <compatibility>\&gt;=11.0.0</compatibility>\n         <download_url>https://github.com/andrefelipeufcg/govbrsso/releases/download/v${VERSION}/glpi-govbrsso-v${VERSION}.zip</download_url>\n      </version>"
+            sed -i "s|<versions>|<versions>\n${NEW_VERSION_BLOCK}|" govbrsso.xml
+          fi
+          
+          # Create branch, commit and open PR
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b chore/bump-v${VERSION}
+          git add setup.php govbrsso.xml
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "chore: auto-bump version to ${VERSION} [skip ci]"
+            git push -f origin chore/bump-v${VERSION}
+            
+            # Move the tag to the new commit containing the updated versions
+            git tag -f v${VERSION}
+            git push origin -f refs/tags/v${VERSION}
+            
+            gh pr create --title "chore: auto-bump version to ${VERSION}" --body "Automated version bump for release v${VERSION}." --base main --head chore/bump-v${VERSION}
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build release ZIP
         run: |
           PLUGIN_NAME="govbrsso"
-          TAG="${{ steps.version.outputs.tag }}"
+          TAG="v${{ steps.version.outputs.tag }}"
 
           # Create a temporary directory with the plugin name
           mkdir -p /tmp/build/${PLUGIN_NAME}
@@ -55,5 +90,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: glpi-govbrsso-${{ steps.version.outputs.tag }}.zip
+          name: ${{ steps.version.outputs.tag }}
+          files: glpi-govbrsso-v${{ steps.version.outputs.tag }}.zip
           generate_release_notes: true
