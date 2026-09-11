@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * Tela de seleção de e-mail/vínculo do Login Único gov.br.
+ * Exibida quando o usuário possui mais de um e-mail (institucional + pessoal
+ * gov.br), permitindo escolher com qual identidade fazer login. O e-mail
+ * escolhido é validado contra a lista guardada na sessão pelo callback e o
+ * login prossegue via UserManager::loginFromClaims().
+ *
+ * @license GPLv3+
+ */
+
 use GlpiPlugin\Govbrsso\UserManager;
 use GlpiPlugin\Govbrsso\Config;
 
