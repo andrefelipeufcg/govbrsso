@@ -199,7 +199,11 @@ final class UserManager
 
         $eventClass = \class_exists('\Glpi\Event') ? '\Glpi\Event' : (\class_exists('\Event') ? '\Event' : null);
         if ($eventClass) {
-            $ip = getenv("HTTP_X_FORWARDED_FOR") ?: getenv("REMOTE_ADDR");
+            if (class_exists('Glpi\Toolbox\IPUtilities')) {
+                $ip = \Glpi\Toolbox\IPUtilities::getClientIP();
+            } else {
+                $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+            }
             $eventClass::log(
                 $user->fields['id'],
                 "system", 
