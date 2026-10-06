@@ -126,7 +126,7 @@ if ($filterCpf !== '') {
     }
 }
 
-$selfUrl = $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/claims.php';
+$selfUrl = $CFG_GLPI['root_doc'] . \Plugin::getPhpDir('govbrsso', false) . '/front/claims.php';
 $filterCpfSafe = htmlspecialchars($filterCpf);
 
 $params = [

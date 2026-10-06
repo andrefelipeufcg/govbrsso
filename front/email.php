@@ -40,7 +40,7 @@ if (isset($_POST['selected_email'])) {
         
         if (isset($result['consent_required']) && $result['consent_required']) {
             $_SESSION['govbrsso_pending_claims'] = $claims;
-            Html::redirect($CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/consent.php');
+            Html::redirect($CFG_GLPI['root_doc'] . \Plugin::getPhpDir('govbrsso', false) . '/front/consent.php');
         }
 
         if (!$result['ok']) {
@@ -75,7 +75,7 @@ Html::nullHeader(__('Selecione o seu Vínculo', 'govbrsso'), $CFG_GLPI['root_doc
 
 \Glpi\Application\View\TemplateRenderer::getInstance()->display('@govbrsso/email.html.twig', [
     'emails' => $_SESSION['govbrsso_ext_api_emails'],
-    'formAction' => $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/email.php',
+    'formAction' => $CFG_GLPI['root_doc'] . \Plugin::getPhpDir('govbrsso', false) . '/front/email.php',
     'csrf' => \Session::getNewCSRFToken()
 ]);
 

@@ -127,7 +127,7 @@ $csrf = $_SESSION['govbrsso_custom_csrf'];
 
 $params = [
     'root_doc'   => $CFG_GLPI['root_doc'],
-    'selfUrl'    => $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/consent.php',
+    'selfUrl'    => $CFG_GLPI['root_doc'] . \Plugin::getPhpDir('govbrsso', false) . '/front/consent.php',
     'csrf'       => $csrf,
     'name'       => $name,
     'email'      => $maskedEmail

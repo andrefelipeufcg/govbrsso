@@ -202,21 +202,21 @@ final class Config
     public static function callbackUrl(): string
     {
         global $CFG_GLPI;
-        return rtrim($CFG_GLPI['url_base'], '/') . '/plugins/govbrsso/front/callback.php';
+        return rtrim($CFG_GLPI['url_base'], '/') . \Plugin::getPhpDir('govbrsso', false) . '/front/callback.php';
     }
 
     /** URL de início do fluxo (alvo do botão). */
     public static function startUrl(): string
     {
         global $CFG_GLPI;
-        return $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/redirect.php';
+        return $CFG_GLPI['root_doc'] . \Plugin::getPhpDir('govbrsso', false) . '/front/redirect.php';
     }
 
     /** URL de logout do plugin (para cadastrar como "URL de Log Out"). */
     public static function pluginLogoutUrl(): string
     {
         global $CFG_GLPI;
-        return rtrim($CFG_GLPI['url_base'], '/') . '/plugins/govbrsso/front/logout.php';
+        return rtrim($CFG_GLPI['url_base'], '/') . \Plugin::getPhpDir('govbrsso', false) . '/front/logout.php';
     }
 
     /** Botão "Entrar com gov.br" para a tela de login. */
@@ -225,7 +225,7 @@ final class Config
         if (!self::isActive()) {
             return '';
         }
-        $url = Html::cleanInputText(self::startUrl());
+        $url = htmlspecialchars(self::startUrl());
 
         $textOr = __('OU', 'govbrsso');
         $textAria = __('Entrar com gov.br', 'govbrsso');

@@ -183,7 +183,7 @@ if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 
                 if (count($extApiEmails) > 1) {
                     $_SESSION['govbrsso_pending_claims'] = $claims;
                     $_SESSION['govbrsso_ext_api_emails'] = $extApiEmails;
-                    Html::redirect($CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/email.php');
+                    Html::redirect($CFG_GLPI['root_doc'] . \Plugin::getPhpDir('govbrsso', false) . '/front/email.php');
                     die();
                 } else {
                     $claims['email'] = $extApiEmails[0]['email'];
@@ -202,7 +202,7 @@ if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 
 $result = UserManager::loginFromClaims($claims);
 
 if (isset($result['consent_required']) && $result['consent_required']) {
-    Html::redirect($CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/consent.php');
+    Html::redirect($CFG_GLPI['root_doc'] . \Plugin::getPhpDir('govbrsso', false) . '/front/consent.php');
 }
 
 if (!$result['ok']) {

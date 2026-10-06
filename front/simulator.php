@@ -396,7 +396,7 @@ if ($isPost) {
     ];
 }
 
-$selfUrl = $CFG_GLPI['root_doc'] . '/plugins/govbrsso/front/simulator.php';
+$selfUrl = $CFG_GLPI['root_doc'] . \Plugin::getPhpDir('govbrsso', false) . '/front/simulator.php';
 
 $params = [
     'root_doc' => $CFG_GLPI['root_doc'],
