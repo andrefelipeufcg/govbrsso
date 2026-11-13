@@ -110,7 +110,7 @@ final class Config
         if (($input['ext_api_active'] ?? '0') === '1') {
             $url = trim((string) ($input['ext_api_url'] ?? ''));
             $key = trim((string) ($input['ext_api_key'] ?? ''));
-            if ($url === '' || $header === '' || ($key === '' && trim(self::getExtApiKey()) === '')) {
+            if ($url === '' || $header === '' || ($key === '' && trim((string) self::get('ext_api_key', '')) === '')) {
                 throw new \InvalidArgumentException('Preencha URL da API Externa, Header e Chave de API antes de habilitar a integracao. Uma chave ja salva pode ser mantida.');
             }
         }

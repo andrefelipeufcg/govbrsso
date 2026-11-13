@@ -107,7 +107,7 @@ $params = [
     'formAction' => $formAction,
     'csrf' => $csrf,
     'c' => $c,
-    'hasExtApiKey' => trim(Config::getExtApiKey()) !== '',
+    'hasExtApiKey' => trim((string) $c['ext_api_key']) !== '',
     'domainRulesHtml' => $domainRulesHtml,
     'profilesOptions' => $profilesOptions,
     'entitiesOptions' => $entitiesOptions,
