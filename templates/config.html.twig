@@ -83,15 +83,25 @@
                 Permite consultar uma API externa para descobrir todos os e-mails vinculados ao CPF do usuário e oferecer uma tela de seleção caso haja mais de um.
             </div>
 
-            <div id="ext_api_fields_section">
+            <div id="ext_api_fields_section"{% if c['ext_api_active'] != '1' %} style="display: none;"{% endif %}>
+                <div class="alert alert-secondary d-flex flex-column align-items-stretch">
+                    <div>{{ __('Exemplo de comando enviado para a API externa (CPF ilustrativo; chave sempre representada por [KEY]):', 'govbrsso') }}</div>
+                    <pre class="mb-0 mt-2" style="white-space: pre-wrap; overflow-wrap: anywhere;"><code id="ext_api_command_preview"></code></pre>
+                </div>
+
                 <div class="mb-3">
                     <label class="form-label">URL da API Externa</label>
                     <input type="text" name="ext_api_url" class="form-control" value="{{ c['ext_api_url'] }}">
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">{{ __('Chave de API (Header Glpi-Api-Key)', 'govbrsso') }}</label>
-                    <input type="password" name="ext_api_key" class="form-control" value="">
+                    <label class="form-label" for="ext_api_header">Header</label>
+                    <input type="text" name="ext_api_header" id="ext_api_header" class="form-control" value="{{ c['ext_api_header'] }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" id="ext_api_key_label" for="ext_api_key">{{ __('Chave de API', 'govbrsso') }} (Header {{ c['ext_api_header'] }})</label>
+                    <input type="password" name="ext_api_key" id="ext_api_key" class="form-control" value="" data-has-saved-key="{{ hasExtApiKey ? '1' : '0' }}">
                     <small class="form-text text-muted">{{ __('Deixe em branco para manter a chave atual (ela fica armazenada de forma encriptada).', 'govbrsso') }}</small>
                 </div>
             </div>
@@ -186,8 +196,26 @@
 
 <script>
 $(function() {
+    function updateExtApiCommand() {
+        var url = $.trim($('input[name="ext_api_url"]').val()).replace(/\/+$/, '');
+        var requestUrl = (url || '[URL_DA_API]') + '/00000000000';
+        var quotedUrl = "'" + requestUrl.replace(/'/g, "'\"'\"'") + "'";
+        var header = $.trim($('#ext_api_header').val());
+        var quotedHeader = "'" + (header + ': [KEY]').replace(/'/g, "'\"'\"'") + "'";
+        $('#ext_api_key_label').text('Chave de API (Header ' + header + ')');
+        $('#ext_api_command_preview').text(
+            'curl --request GET --ipv4 --connect-timeout 1 --max-time 2 '
+            + '--header ' + quotedHeader + ' --url ' + quotedUrl
+        );
+    }
+    $('input[name="ext_api_url"], #ext_api_header').on('input', updateExtApiCommand);
+    updateExtApiCommand();
+
     function toggleExtApiFields() {
-        if ($('#ext_api_active_chk').is(':checked')) {
+        var active = $('#ext_api_active_chk').is(':checked');
+        $('input[name="ext_api_url"], #ext_api_header').prop('required', active);
+        $('#ext_api_key').prop('required', active && $('#ext_api_key').attr('data-has-saved-key') !== '1');
+        if (active) {
             $('#ext_api_fields_section').show();
         } else {
             $('#ext_api_fields_section').hide();

@@ -39,7 +39,13 @@ if (isset($_POST['save_config'])) {
         }
     }
 
-    Config::save($_POST);
+    try {
+        Config::save($_POST);
+    } catch (\InvalidArgumentException $e) {
+        Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
+        Html::redirect($_SERVER['REQUEST_URI']);
+        exit;
+    }
     Session::addMessageAfterRedirect('Configuração do gov.br salva com sucesso.', true, INFO);
     Html::redirect($_SERVER['REQUEST_URI']);
 }
@@ -53,10 +59,10 @@ $c = Config::getAll();
 $active     = $c['is_active'] === '1' ? 'checked' : '';
 $autocreate = $c['auto_create'] === '1' ? 'checked' : '';
 
-$callbackUrl = Html::cleanInputText(Config::callbackUrl());
-$logoutUrl   = Html::cleanInputText(Config::pluginLogoutUrl());
+$callbackUrl = htmlspecialchars(Config::callbackUrl());
+$logoutUrl   = htmlspecialchars(Config::pluginLogoutUrl());
 
-$f = static fn (string $k): string => Html::cleanInputText((string) ($c[$k] ?? ''));
+$f = static fn (string $k): string => htmlspecialchars((string) ($c[$k] ?? ''));
 
 $selLogin = static fn (string $v): string => $c['login_field'] === $v ? 'selected' : '';
 $selLevel = static fn (string $v): string => ($c['min_level'] ?? '') === $v ? 'selected' : '';
@@ -65,13 +71,13 @@ $formAction = $_SERVER['REQUEST_URI'];
 
 global $DB;
 $profilesOptions = '<option value="0">---</option>';
-foreach ($DB->request('glpi_profiles') as $p) {
-    $profilesOptions .= sprintf('<option value="%d">%s</option>', $p['id'], Html::cleanInputText($p['name']));
+foreach ($DB->request(['FROM' => 'glpi_profiles']) as $p) {
+    $profilesOptions .= sprintf('<option value="%d">%s</option>', $p['id'], htmlspecialchars($p['name']));
 }
 
 $entitiesOptions = '<option value="0">---</option>';
-foreach ($DB->request('glpi_entities') as $e) {
-    $entitiesOptions .= sprintf('<option value="%d">%s</option>', $e['id'], Html::cleanInputText($e['completename']));
+foreach ($DB->request(['FROM' => 'glpi_entities']) as $e) {
+    $entitiesOptions .= sprintf('<option value="%d">%s</option>', $e['id'], htmlspecialchars($e['completename']));
 }
 
 $domainRules = json_decode($c['domain_rules'] ?? '[]', true) ?: [];
@@ -80,7 +86,7 @@ foreach ($domainRules as $rule) {
     $profOpts = str_replace('value="' . $rule['profile_id'] . '"', 'value="' . $rule['profile_id'] . '" selected', $profilesOptions);
     $entOpts  = str_replace('value="' . $rule['entity_id'] . '"', 'value="' . $rule['entity_id'] . '" selected', $entitiesOptions);
     
-    $domain = Html::cleanInputText($rule['domain']);
+    $domain = htmlspecialchars($rule['domain']);
     $domainRulesHtml .= <<<TR
     <tr>
         <td><input type="text" name="domain_rule_domain[]" value="{$domain}" class="form-control" required></td>
@@ -101,6 +107,7 @@ $params = [
     'formAction' => $formAction,
     'csrf' => $csrf,
     'c' => $c,
+    'hasExtApiKey' => trim((string) $c['ext_api_key']) !== '',
     'domainRulesHtml' => $domainRulesHtml,
     'profilesOptions' => $profilesOptions,
     'entitiesOptions' => $entitiesOptions,

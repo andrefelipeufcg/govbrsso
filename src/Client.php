@@ -74,7 +74,7 @@ final class Client
     /**
      * Troca o authorization code por tokens.
      *
-     * @return array{access_token?:string,id_token?:string,token_type?:string,expires_in?:int,scope?:string,error?:string,error_description?:string}
+     * @return array{access_token?:string,id_token?:string,token_type?:string,expires_in?:int,scope?:string,error?:string,error_description?:string,curl_errno?:int,curl_error?:string}
      */
     public static function requestToken(
         string $clientId,
@@ -100,11 +100,20 @@ final class Client
         // espera as credenciais puras antes do base64.
         $basic = base64_encode($clientId . ':' . $clientSecret);
 
-        [$status, $resp] = self::http('POST', Config::tokenUrl(), $body, [
+        [$status, $resp, $curlErrno, $curlError] = self::http('POST', Config::tokenUrl(), $body, [
             'Content-Type: application/x-www-form-urlencoded',
             'Authorization: Basic ' . $basic,
             'Accept: application/json',
         ]);
+
+        if ($curlErrno !== 0) {
+            return [
+                'error' => 'transport_error',
+                'error_description' => "HTTP $status; cURL error $curlErrno: $curlError",
+                'curl_errno' => $curlErrno,
+                'curl_error' => $curlError,
+            ];
+        }
 
         $data = json_decode((string) $resp, true);
         if (!is_array($data)) {
@@ -290,7 +299,7 @@ final class Client
 
     /**
      * @param array<int,string> $headers
-     * @return array{0:int,1:string} [status, body]
+     * @return array{0:int,1:string,2:int,3:string} [status, body, curl_errno, curl_error]
      */
     private static function http(string $method, string $url, ?string $body, array $headers): array
     {
@@ -317,8 +326,10 @@ final class Client
         }
         $resp   = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErrno = curl_errno($ch);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
-        return [$status, is_string($resp) ? $resp : ''];
+        return [$status, is_string($resp) ? $resp : '', $curlErrno, $curlError];
     }
 }

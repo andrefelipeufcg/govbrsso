@@ -87,9 +87,25 @@ jobs:
           cd /tmp/build
           zip -r "${GITHUB_WORKSPACE}/glpi-govbrsso-${TAG}.zip" ${PLUGIN_NAME}/
 
+      - name: Generate and filter release notes
+        id: release_notes
+        run: |
+          TAG="v${{ steps.version.outputs.tag }}"
+
+          # Generate default notes from GitHub API
+          NOTES=$(gh api repos/${{ github.repository }}/releases/generate-notes -f tag_name="${TAG}" --jq .body)
+
+          # Remove lines mentioning auto-bump PRs/commits
+          FILTERED_NOTES=$(echo "$NOTES" | sed -E '/\*\s*chore:\s*auto-bump version to/d')
+
+          # Save to file for softprops/action-gh-release
+          echo "$FILTERED_NOTES" > "${GITHUB_WORKSPACE}/RELEASE_NOTES.md"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.version.outputs.tag }}
           files: glpi-govbrsso-v${{ steps.version.outputs.tag }}.zip
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md

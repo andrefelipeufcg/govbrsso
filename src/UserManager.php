@@ -166,6 +166,12 @@ final class UserManager
                     'entities_id'  => $entity_id,
                     'is_recursive' => 1
                 ]);
+                // Define as preferências (entidade e perfil padrão) de acordo com a regra
+                $user->update([
+                    'id'          => $id,
+                    'entities_id' => $entity_id,
+                    'profiles_id' => $profile_id
+                ]);
             }
             
             $user->getFromDB($id);
@@ -193,7 +199,11 @@ final class UserManager
 
         $eventClass = \class_exists('\Glpi\Event') ? '\Glpi\Event' : (\class_exists('\Event') ? '\Event' : null);
         if ($eventClass) {
-            $ip = getenv("HTTP_X_FORWARDED_FOR") ?: getenv("REMOTE_ADDR");
+            if (class_exists('Glpi\Toolbox\IPUtilities')) {
+                $ip = \Glpi\Toolbox\IPUtilities::getClientIP();
+            } else {
+                $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+            }
             $eventClass::log(
                 $user->fields['id'],
                 "system", 
