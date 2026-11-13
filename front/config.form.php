@@ -39,7 +39,13 @@ if (isset($_POST['save_config'])) {
         }
     }
 
-    Config::save($_POST);
+    try {
+        Config::save($_POST);
+    } catch (\InvalidArgumentException $e) {
+        Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
+        Html::redirect($_SERVER['REQUEST_URI']);
+        exit;
+    }
     Session::addMessageAfterRedirect('Configuração do gov.br salva com sucesso.', true, INFO);
     Html::redirect($_SERVER['REQUEST_URI']);
 }
@@ -101,6 +107,7 @@ $params = [
     'formAction' => $formAction,
     'csrf' => $csrf,
     'c' => $c,
+    'hasExtApiKey' => trim(Config::getExtApiKey()) !== '',
     'domainRulesHtml' => $domainRulesHtml,
     'profilesOptions' => $profilesOptions,
     'entitiesOptions' => $entitiesOptions,

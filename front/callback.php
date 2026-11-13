@@ -148,7 +148,7 @@ if ($extApiActive && $extApiUrl !== '' && Config::get('login_field', 'cpf') === 
         curl_setopt($ch, CURLOPT_TIMEOUT, 2);
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); // Força IPv4 para evitar timeouts de IPv6 quebrado
         if ($extApiKey !== '') {
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Glpi-Api-Key: ' . $extApiKey]);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [trim((string) Config::get('ext_api_header')) . ': ' . $extApiKey]);
         }
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

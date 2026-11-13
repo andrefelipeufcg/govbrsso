@@ -37,6 +37,7 @@ final class Config
         'default_entity_id'  => '0',
         'domain_rules'       => '[]',
         'ext_api_url'        => '',
+        'ext_api_header'     => 'Glpi-Api-Key',
         'ext_api_key'        => '',
         'ext_api_active'     => '0',
     ];
@@ -45,7 +46,11 @@ final class Config
     public static function getAll(): array
     {
         $values = GlpiConfig::getConfigurationValues(self::CONTEXT);
-        return array_merge(self::DEFAULTS, is_array($values) ? $values : []);
+        $all = array_merge(self::DEFAULTS, is_array($values) ? $values : []);
+        if (trim((string) $all['ext_api_header']) === '') {
+            $all['ext_api_header'] = self::DEFAULTS['ext_api_header'];
+        }
+        return $all;
     }
 
     public static function get(string $key, ?string $default = null): ?string
@@ -101,6 +106,18 @@ final class Config
      */
     public static function save(array $input): void
     {
+        $header = trim((string) ($input['ext_api_header'] ?? self::get('ext_api_header')));
+        if (($input['ext_api_active'] ?? '0') === '1') {
+            $url = trim((string) ($input['ext_api_url'] ?? ''));
+            $key = trim((string) ($input['ext_api_key'] ?? ''));
+            if ($url === '' || $header === '' || ($key === '' && trim(self::getExtApiKey()) === '')) {
+                throw new \InvalidArgumentException('Preencha URL da API Externa, Header e Chave de API antes de habilitar a integracao. Uma chave ja salva pode ser mantida.');
+            }
+        }
+        if ($header !== '' && !preg_match("/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/D", $header)) {
+            throw new \InvalidArgumentException('O Header deve ser um nome HTTP valido, sem espacos, dois-pontos ou quebras de linha.');
+        }
+
         $allowed = array_keys(self::DEFAULTS);
         $to_save = [];
 
